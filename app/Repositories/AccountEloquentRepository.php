@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Enums\AccountBank;
+use App\Enums\AccountType;
+use App\Models\Account;
+use App\Repositories\Contracts\AccountRepository;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+
+class AccountEloquentRepository implements AccountRepository
+{
+    public function __construct(
+        protected readonly Model $model,
+    ) {
+    }
+
+    protected function builder(): Builder
+    {
+        return $this->model
+            ->newQuery();
+    }
+
+    public function findOrCreateByBank(
+        AccountType $type,
+        AccountBank $bank,
+        string $agency,
+        string $account,
+        string $accountDigit
+    ): Account {
+        return Account::query()
+            ->firstOrCreate([
+                'bank' => $bank->value,
+                'agency' => $agency,
+                'account' => $account,
+                'account_digit' => $accountDigit,
+            ], ['type' => $type]);
+    }
+}
