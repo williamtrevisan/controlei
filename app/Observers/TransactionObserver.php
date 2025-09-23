@@ -2,16 +2,32 @@
 
 namespace App\Observers;
 
+use App\Actions\CreateFutureTransactions;
 use App\Models\Transaction;
+use App\Repositories\Contracts\TransactionRepository;
 
 class TransactionObserver
 {
+    public function __construct(
+        private readonly TransactionRepository $transactionRepository,
+        private readonly CreateFutureTransactions $createFutureTransactions,
+    ) {
+    }
+
     public function creating(Transaction $transaction): void
     {
-        if (Transaction::where('hash', $hash = $transaction->hash())->exists()) {
+        if ($this->transactionRepository->existsBy('hash', ($hash = $transaction->hash()))) {
             return;
         }
 
+        $transaction->setRelation('lastPaidInstallment', $transaction->current_installment);
+
+        $transaction->current_installment = 1;
         $transaction->hash = $hash;
+    }
+
+    public function created(Transaction $transaction): void
+    {
+        $this->createFutureTransactions->execute($transaction);
     }
 }

@@ -2,12 +2,16 @@
 
 namespace App\DataTransferObjects;
 
-use Banklink\Entities\Transaction;
-use Banklink\Enums\TransactionDirection;
-use Banklink\Enums\TransactionKind;
-use Banklink\Enums\TransactionPaymentMethod;
+use App\Enums\TransactionDirection;
+use App\Enums\TransactionKind;
+use App\Enums\TransactionPaymentMethod;
+use App\Enums\TransactionStatus;
+use App\Models\Transaction;
+use App\ValueObjects\StatementPeriod;
+use Banklink\Entities;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class TransactionData implements Arrayable
@@ -24,14 +28,17 @@ class TransactionData implements Arrayable
         public int $accountId,
         public ?int $cardId,
         public ?int $incomeSourceId,
+        public ?string $parentTransactionId,
         public Carbon $date,
         public string $description,
-        public string $amount,
-        public TransactionDirection $direction,
-        public TransactionKind $kind,
-        public TransactionPaymentMethod $paymentMethod,
+        public int $amount,
+        public TransactionDirection|\Banklink\Enums\TransactionDirection $direction,
+        public TransactionKind|\Banklink\Enums\TransactionKind $kind,
+        public TransactionPaymentMethod|\Banklink\Enums\TransactionPaymentMethod $paymentMethod,
         public ?int $currentInstallment,
         public ?int $totalInstallments,
+        public TransactionStatus $status = TransactionStatus::Paid,
+        public ?string $matcherRegex,
         public ?string $statementPeriod,
     ) {
         $this->id = Str::uuid7()->toString();
@@ -41,26 +48,52 @@ class TransactionData implements Arrayable
     }
 
     public static function from(
-        Transaction $transaction,
+        Entities\Transaction $transaction,
         int $accountId,
         ?int $cardId = null,
         ?int $incomeSourceId = null,
-        ?string $statementPeriod = null,
-        ?TransactionKind $kind = null
+        ?string $statementPeriod = null
     ): self {
         return new self(
             accountId: $accountId,
             cardId: $cardId,
             incomeSourceId: $incomeSourceId,
+            parentTransactionId: null,
             date: $transaction->date(),
             description: $transaction->description(),
-            amount: $transaction->amount()->getAmount(),
+            amount: $transaction->amount()->getMinorAmount()->toInt(),
             direction: $transaction->direction(),
-            kind: $kind ?? $transaction->kind(),
+            kind: $transaction->kind(),
             paymentMethod: $transaction->paymentMethod(),
             currentInstallment: $transaction->installments()?->current(),
             totalInstallments: $transaction->installments()?->total(),
+            status: TransactionStatus::Paid,
+            matcherRegex: null,
             statementPeriod: $statementPeriod,
+        );
+    }
+
+    public static function fromEntity(
+        Transaction $transaction,
+        int $installment,
+        StatementPeriod $statementPeriod
+    ): self {
+        return new self(
+            accountId: $transaction->account?->id,
+            cardId: $transaction->card?->id,
+            incomeSourceId: null,
+            parentTransactionId: $transaction->id,
+            date: $transaction->date,
+            description: $transaction->description,
+            amount: $transaction->amount->getMinorAmount()->toInt(),
+            direction: $transaction->direction,
+            kind: $transaction->kind,
+            paymentMethod: $transaction->payment_method,
+            currentInstallment: $installment,
+            totalInstallments: $transaction->total_installments,
+            status: $installment > $transaction->getRelation('lastPaidInstallment') ? TransactionStatus::Scheduled : TransactionStatus::Paid,
+            matcherRegex: null,
+            statementPeriod: $statementPeriod->value(),
         );
     }
 
@@ -71,6 +104,7 @@ class TransactionData implements Arrayable
             'account_id' => $this->accountId,
             'card_id' => $this->cardId,
             'income_source_id' => $this->incomeSourceId,
+            'parent_transaction_id' => $this->parentTransactionId,
             'date' => $this->date,
             'description' => $this->description,
             'amount' => $this->amount,
@@ -80,6 +114,8 @@ class TransactionData implements Arrayable
             'current_installment' => $this->currentInstallment,
             'total_installments' => $this->totalInstallments,
             'statement_period' => $this->statementPeriod,
+            'status' => $this->status,
+            'matcher_regex' => $this->matcherRegex,
             'hash' => $this->hash,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,

@@ -8,14 +8,18 @@ use App\Casts\AsStatementPeriod;
 use App\Enums\TransactionDirection;
 use App\Enums\TransactionKind;
 use App\Enums\TransactionPaymentMethod;
+use App\Enums\TransactionStatus;
+use App\Observers\TransactionObserver;
 use App\ValueObjects\StatementPeriod;
 use Banklink\Actions\Classifiers\Contracts\TransactionClassifier;
 use Brick\Money\Money;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -23,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property ?int $account_id
  * @property ?int $card_id
  * @property ?int $income_source_id
+ * @property ?string $parent_transaction_id
  * @property Carbon $date
  * @property string $description
  * @property Money $amount
@@ -32,20 +37,33 @@ use Illuminate\Support\Carbon;
  * @property int $current_installment
  * @property int $total_installments
  * @property StatementPeriod $statement_period
+ * @property TransactionStatus $status
+ * @property ?string $matcher_regex
  * @property string $hash
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property-read string $remaining_installments
+ * @property-read string $installments
+ * @property-read ?Account $account
+ * @property-read ?Card $card
+ * @property-read ?IncomeSource $incomeSource
+ * @property-read ?Transaction $parent
+ * @property-read ?Transaction $child
  */
+#[ObservedBy(TransactionObserver::class)]
 class Transaction extends Model
 {
     /** @use HasFactory<\Database\Factories\TransactionFactory> */
     use HasFactory;
     use HasUuids;
 
+    protected ?int $lastPaidInstallment = null;
+
     protected $fillable = [
         'account_id',
         'card_id',
         'income_source_id',
+        'parent_transaction_id',
         'date',
         'description',
         'amount',
@@ -55,7 +73,9 @@ class Transaction extends Model
         'current_installment',
         'total_installments',
         'statement_period',
-        'hash',
+        'status',
+        'matcher_regex',
+        'hash'
     ];
 
     protected function remainingInstallments(): Attribute
@@ -78,6 +98,18 @@ class Transaction extends Model
         );
     }
 
+    public function hash(): string
+    {
+        return hash('sha256', implode('|', [
+            $this->account_id,
+            $this->card_id,
+            $this->date->format('Y-m-d'),
+            $this->description,
+            $this->amount,
+            $this->current_installment,
+        ]));
+    }
+
     protected function casts(): array
     {
         return [
@@ -87,6 +119,7 @@ class Transaction extends Model
             'kind' => TransactionKind::class,
             'payment_method' => TransactionPaymentMethod::class,
             'statement_period' => AsStatementPeriod::class,
+            'status' => TransactionStatus::class,
         ];
     }
 
@@ -103,6 +136,16 @@ class Transaction extends Model
     public function incomeSource(): BelongsTo
     {
         return $this->belongsTo(IncomeSource::class);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Transaction::class, 'parent_transaction_id');
+    }
+
+    public function child(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'parent_transaction_id');
     }
 
     final public function classify(): self

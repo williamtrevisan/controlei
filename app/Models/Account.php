@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property ?string $account
  * @property ?string $account_digit
  * @property AccountType $type
- * @property-read string $accountNumber
+ * @property-read string $account_number
  */
 class Account extends Model
 {
