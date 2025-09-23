@@ -9,10 +9,13 @@ use App\Filament\Imports\TransactionImporter;
 use App\Filament\Resources\Transactions\TransactionResource;
 use App\Filament\Resources\Transactions\Widgets\MonthlyStatement;
 use App\Jobs\FetchAndSynchronizeTransactions;
+use App\Jobs\ProcessTransactionInstallments;
 use App\Models\Synchronization;
+use App\Models\Transaction;
 use App\ValueObjects\StatementPeriod;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\CreateAction;
 use Filament\Actions\ImportAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -21,6 +24,8 @@ use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Bus;
 
 class ListTransactions extends ListRecords
@@ -28,8 +33,6 @@ class ListTransactions extends ListRecords
     use ExposesTableToWidgets;
 
     protected static string $resource = TransactionResource::class;
-
-    public ?string $activeTab = null;
 
     public function mount(): void
     {
@@ -100,6 +103,11 @@ class ListTransactions extends ListRecords
                         ->placeholder('******'),
                 ]),
 
+            CreateAction::make('shared_expense')
+                ->label('Gasto compartilhado')
+                ->icon(Heroicon::OutlinedPlus)
+                ->color('gray'),
+
             ActionGroup::make([
                 ImportAction::make()
                     ->label('Importar transações')
@@ -114,8 +122,8 @@ class ListTransactions extends ListRecords
                     ->color('gray')
                     ->action(fn () => app()->make(ClassifyTransactions::class)->execute()),
             ])
-            ->icon(Heroicon::OutlinedEllipsisHorizontal)
-            ->color('gray'),
+                ->icon(Heroicon::OutlinedEllipsisHorizontal)
+                ->color('gray'),
         ];
     }
 
@@ -152,6 +160,7 @@ class ListTransactions extends ListRecords
                 ->icon(Heroicon::OutlinedClock),
         ];
     }
+
 
     public function getSubheading(): ?string
     {

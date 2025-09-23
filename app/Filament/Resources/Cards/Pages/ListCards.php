@@ -21,7 +21,7 @@ class ListCards extends ListRecords
         return [
             CreateAction::make()
                 ->label('Novo registro')
-                ->icon(Heroicon::Plus),
+                ->icon(Heroicon::OutlinedPlus),
         ];
     }
 

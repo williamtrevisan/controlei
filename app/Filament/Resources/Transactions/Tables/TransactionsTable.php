@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Transactions\Tables;
 
+use App\Enums\TransactionStatus;
 use App\Models\Transaction;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Alignment;
@@ -16,7 +17,7 @@ class TransactionsTable
             ->columns([
                 TextColumn::make('date')
                     ->label('Data')
-                    ->date('d M')
+                    ->date('d/m/Y')
                     ->sortable(),
 
                 TextColumn::make('amount')
@@ -39,6 +40,11 @@ class TransactionsTable
                 TextColumn::make('installments')
                     ->label('Parcela')
                     ->alignment(Alignment::Center),
+
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->visible(fn (?Transaction $transaction) => ! $transaction?->status->isPaid()),
 
                 TextColumn::make('kind')
                     ->label('Tipo')

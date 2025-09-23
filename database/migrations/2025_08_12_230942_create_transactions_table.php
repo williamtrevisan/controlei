@@ -13,9 +13,10 @@ return new class extends Migration
             $table->foreignId('account_id')->constrained();
             $table->foreignId('card_id')->nullable()->constrained();
             $table->foreignId('income_source_id')->nullable()->constrained();
+            $table->foreignUuid('parent_transaction_id')->nullable()->constrained();
             $table->date('date');
             $table->string('description');
-            $table->decimal('amount', 14);
+            $table->unsignedBigInteger('amount')->default(0);
             $table->enum('direction', ['inflow', 'outflow']);
             $table->enum('kind', [
                 'cashback',
@@ -28,6 +29,8 @@ return new class extends Migration
             $table->unsignedSmallInteger('current_installment')->nullable();
             $table->unsignedSmallInteger('total_installments')->nullable();
             $table->string('statement_period')->nullable()->index();
+            $table->enum('status', ['scheduled', 'paid', 'canceled'])->default('paid');
+            $table->string('matcher_regex')->nullable();
             $table->string('hash', 64)->unique();
             $table->timestamps();
         });

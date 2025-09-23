@@ -3,12 +3,17 @@
 namespace App\Filament\Resources\Cards\Schemas;
 
 use App\Enums\CardBrand;
+use App\Enums\CardOwner;
 use App\Enums\CardType;
+use App\Models\Account;
 use App\Models\Card;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 
@@ -24,22 +29,47 @@ class CardForm
                     ->tabs([
                         Tab::make('Informações do cartão')
                             ->schema([
-                                Select::make('account_id')
-                                    ->label('Conta')
-                                    ->relationship('account', 'account_number')
-                                    ->required()
-                                    ->placeholder('Selecione a conta a qual o cartão é pertencente'),
+                                 Select::make('account_id')
+                                     ->label('Conta')
+                                     ->relationship('account', 'id')
+                                     ->getOptionLabelFromRecordUsing(fn (Account $account) => $account->account_number)
+                                     ->required()
+                                     ->placeholder('Selecione a conta a qual o cartão é pertencente'),
+
+                                 Checkbox::make('is_shared')
+                                     ->label('Este cartão pertence a outra pessoa')
+                                     ->formatStateUsing(fn (?Card $card) => $card?->owner)
+                                     ->live()
+                                     ->afterStateUpdated(function (Get $get, Set $set) {
+                                         if ($get('is_shared')) {
+                                             return;
+                                         }
+
+                                         $set('owner', null);
+                                     })
+                                     ->helperText('Marque se este cartão será usado para gastos compartilhados'),
+
+                                 Select::make('owner')
+                                     ->label('Proprietário do cartão')
+                                     ->options(CardOwner::class)
+                                     ->placeholder('Selecione o proprietário')
+                                     ->visible(fn (Get $get) => $get('is_shared'))
+                                     ->required(fn (Get $get) => $get('is_shared'))
+                                     ->searchable()
+                                     ->helperText('Este cartão será usado para gastos compartilhados'),
 
                                 TextInput::make('last_four_digits')
                                     ->label('Últimos quatro digitos')
                                     ->required()
                                     ->length(4)
-                                    ->placeholder('Ex: 1111'),
+                                    ->mask('9999')
+                                    ->placeholder('1111'),
 
                                 TextInput::make('matcher_regex')
                                     ->label('Regex para identificação do pagamento na fatura')
                                     ->required()
-                                    ->placeholder('Ex: '),
+                                    ->placeholder('/^(some*.thing)/i')
+                                    ->helperText('Use delimitadores (ex.: /…/i). O regex é aplicado sobre a descrição do lançamento.'),
 
                                 Select::make('type')
                                     ->options(CardType::class)
@@ -59,6 +89,10 @@ class CardForm
 
                                 TextInput::make('limit')
                                     ->label('Limite')
+                                    ->default(0)
+                                    ->afterStateHydrated(function (TextInput $component, ?Card $card) {
+                                        $component->state((string) $card?->limit->getAmount());
+                                    })
                                     ->prefix('R$')
                                     ->mask(RawJs::make(<<<'JS'
                                         function formatter(value) {
@@ -75,22 +109,22 @@ class CardForm
                                             });
                                         }
                                     JS))
-                                    ->placeholder('R$ 0,00')
-                                    ->formatStateUsing(function (Card $card): string {
-                                        return (string) $card->limit->getAmount();
-                                    }),
+                                    ->placeholder('R$ 0,00'),
 
                                 TextInput::make('due_day')
                                     ->label('Dia de vencimento')
                                     ->required()
                                     ->numeric()
                                     ->minValue(1)
-                                    ->maxValue(31)
+                                    ->maxValue(28)
+                                    ->default(1)
                                     ->live(onBlur: true),
 
                                 TextInput::make('closing_day')
                                     ->label('Dia de fechamento (mês atual)')
-                                    ->formatStateUsing(fn (Card $card) => $card->closing_day)
+                                    ->afterStateHydrated(function (TextInput $component, ?Card $card) {
+                                        $component->state($card?->closing_day);
+                                    })
                                     ->disabled()
                                     ->helperText('Calculado automaticamente baseado no banco e dia de vencimento'),
                             ]),

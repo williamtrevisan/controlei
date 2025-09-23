@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\AsMoney;
 use App\Enums\AccountBank;
 use App\Enums\CardBrand;
+use App\Enums\CardOwner;
 use App\Enums\CardType;
 use Brick\Money\Money;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -21,8 +22,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CardBrand $brand
  * @property Money $limit
  * @property int $due_day
- * @property-read int $closingDay
+ * @property-read int $closing_day
  * @property string $matcher_regex
+ * @property ?CardOwner $owner
  */
 class Card extends Model
 {
@@ -37,6 +39,7 @@ class Card extends Model
         'limit',
         'due_day',
         'matcher_regex',
+        'owner',
     ];
 
     protected function closingDay(): Attribute
@@ -56,6 +59,7 @@ class Card extends Model
             'brand' => CardBrand::class,
             'type' => CardType::class,
             'limit' => AsMoney::class,
+            'owner' => CardOwner::class,
         ];
     }
 

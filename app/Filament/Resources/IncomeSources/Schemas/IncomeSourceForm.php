@@ -75,6 +75,7 @@ class IncomeSourceForm
                                             default => 'Média mensal',
                                         };
                                     })
+                                    ->default(0)
                                     ->required()
                                     ->prefix('R$')
                                     ->mask(RawJs::make(<<<'JS'
@@ -93,8 +94,8 @@ class IncomeSourceForm
                                         }
                                     JS))
                                     ->placeholder('R$ 0,00')
-                                    ->formatStateUsing(function (IncomeSource $incomeSource): string {
-                                        return $incomeSource->average_amount ? (string) $incomeSource->average_amount->getAmount() : '';
+                                    ->formatStateUsing(function (?IncomeSource $incomeSource): string {
+                                        return (string) $incomeSource?->average_amount->getAmount();
                                     })
                                     ->helperText(function ($get) {
                                         $frequency = $get('frequency');

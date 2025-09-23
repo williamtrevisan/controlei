@@ -37,10 +37,23 @@ class CardEloquentRepository implements CardRepository
             ]);
     }
 
+    /**
+     * @return Collection<int, Card>
+     */
     public function getAllMatcherRegex(): Collection
     {
         return $this->builder()
             ->whereNotNull('matcher_regex')
             ->pluck('matcher_regex');
+    }
+
+    /**
+     * @return Collection<int, Card>
+     */
+    public function findSharedCards(): Collection
+    {
+        return $this->builder()
+            ->whereNotNull('owner')
+            ->get();
     }
 }

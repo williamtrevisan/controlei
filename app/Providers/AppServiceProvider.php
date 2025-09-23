@@ -19,11 +19,17 @@ use App\Services\Contracts;
 use App\Services\InstallmentGenerator;
 use Filament\Pages\Page;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Telescope\Telescope;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        if ($this->app->environment('local') && class_exists(\Laravel\Telescope\TelescopeServiceProvider::class)) {
+            $this->app->register(\Laravel\Telescope\TelescopeServiceProvider::class);
+            $this->app->register(TelescopeServiceProvider::class);
+        }
+
         $this->app->scoped(Contracts\InstallmentsGenerator::class, InstallmentGenerator::class);
 
         $this->app->singleton(IncomeSourceRepository::class, fn () => new IncomeSourceEloquentRepository(new IncomeSource()));
@@ -35,7 +41,5 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Page::alignFormActionsEnd();
-
-        Transaction::observe(TransactionObserver::class);
     }
 }

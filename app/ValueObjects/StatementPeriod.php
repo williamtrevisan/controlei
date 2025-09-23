@@ -46,6 +46,22 @@ class StatementPeriod
         return new self(sprintf('%04d-%02d', $year, $month));
     }
 
+    public function rewind(int $months): self
+    {
+        $year = $this->year();
+
+        $month = $this->month();
+        $month -= $months;
+
+        while ($month <= 0) {
+            $month += 12;
+
+            $year--;
+        }
+
+        return new self(sprintf('%04d-%02d', $year, $month));
+    }
+
     public function advance(int $months): self
     {
         $year = $this->year();
