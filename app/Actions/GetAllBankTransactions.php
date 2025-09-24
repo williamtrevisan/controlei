@@ -17,6 +17,7 @@ class GetAllBankTransactions
 {
     public function __construct(
         private readonly GetAllIncomeSource $getAllIncomeSource,
+        private readonly GetAllExpenses $getAllExpenses,
         private readonly FindOrCreateAccount $findOrCreateAccount,
         private readonly FindOrCreateCard $findOrCreateCard
     ) {
@@ -31,28 +32,34 @@ class GetAllBankTransactions
 
             $account = $this->findOrCreateAccount->execute($bankAccount);
             $incomeSources = $this->getAllIncomeSource->execute();
+            $expenses = $this->getAllExpenses->execute();
             $bankCards = $bankAccount->cards()->all();
 
             return $bankAccount->transactions()
                 ->between(now()->startOfYear(), now())
-                ->map($this->toTransactionData($account, $incomeSources, $bankCards->first()->dueDay()))
+                ->map($this->toTransactionData($account, $incomeSources, $expenses, $bankCards->first()->dueDay()))
                 ->merge(
                     $bankCards
-                        ->flatMap($this->processCardTransactions($account, $incomeSources, $bankCards))
+                        ->flatMap($this->processCardTransactions($account, $incomeSources, $expenses, $bankCards))
                 )
                 ->lazy();
         });
     }
 
-    private function toTransactionData(Account $account, Collection $incomeSources, int $dueDay): Closure
+    private function toTransactionData(Account $account, Collection $incomeSources, Collection $expenses, int $dueDay): Closure
     {
-        return function (Transaction $transaction) use ($account, $incomeSources, $dueDay): TransactionData {
+        return function (Transaction $transaction) use ($account, $incomeSources, $expenses, $dueDay): TransactionData {
             return TransactionData::from(
                 transaction: $transaction,
                 accountId: $account->id,
                 incomeSourceId: $transaction->direction()->isInflow()
                     ? $incomeSources
                         ->first(fn (IncomeSource $incomeSource): bool => str($transaction->description())->isMatch($incomeSource->matcher_regex))
+                        ?->id
+                    : null,
+                expenseId: $transaction->direction()->isOutflow()
+                    ? $expenses
+                        ->first(fn ($expense): bool => str($transaction->description())->isMatch($expense->matcher_regex))
                         ?->id
                     : null,
                 statementPeriod: $this->generateStatementPeriod($transaction, $dueDay),
@@ -80,19 +87,19 @@ class GetAllBankTransactions
         return $dueDate->format('Y-m');
     }
 
-    private function processCardTransactions(Account $account, Collection $incomeSources, Collection $bankCards): Closure
+    private function processCardTransactions(Account $account, Collection $incomeSources, Collection $expenses, Collection $bankCards): Closure
     {
-        return function (Card $bankCard) use ($account, $incomeSources, $bankCards): Collection {
+        return function (Card $bankCard) use ($account, $incomeSources, $expenses, $bankCards): Collection {
             return $bankCard->statements()
                 ->all()
-                ->flatMap(function (CardStatement $statement) use ($account, $incomeSources, $bankCards) {
+                ->flatMap(function (CardStatement $statement) use ($account, $incomeSources, $expenses, $bankCards) {
                     return $statement->holders()
-                        ->flatMap(function ($holder) use ($account, $incomeSources, $bankCards) {
+                        ->flatMap(function ($holder) use ($account, $incomeSources, $expenses, $bankCards) {
                             $card = $this->findOrCreateCard
                                 ->execute(accountId: $account->id, holder: $holder, cards: $bankCards);
 
                             return $holder->transactions()
-                                ->map(function (Transaction $transaction) use ($account, $card, $incomeSources): TransactionData {
+                                ->map(function (Transaction $transaction) use ($account, $card, $incomeSources, $expenses): TransactionData {
                                     return TransactionData::from(
                                         transaction: $transaction,
                                         accountId: $account->id,
@@ -100,6 +107,11 @@ class GetAllBankTransactions
                                         incomeSourceId: $transaction->direction()->isInflow()
                                             ? $incomeSources
                                                 ->first(fn (IncomeSource $incomeSource): bool => str($transaction->description())->isMatch($incomeSource->matcher_regex))
+                                                ?->id
+                                            : null,
+                                        expenseId: $transaction->direction()->isOutflow()
+                                            ? $expenses
+                                                ->first(fn ($expense): bool => str($transaction->description())->isMatch($expense->matcher_regex))
                                                 ?->id
                                             : null,
                                         statementPeriod: $transaction->statementPeriod(),

@@ -26,6 +26,8 @@ class IncomeSourceResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'slug';
 
+    protected static string|null|\UnitEnum $navigationGroup = 'Configurações';
+
     protected static ?string $navigationLabel = 'Fontes de renda';
 
     public static function form(Schema $schema): Schema

@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('account_id')->constrained();
             $table->foreignId('card_id')->nullable()->constrained();
             $table->foreignId('income_source_id')->nullable()->constrained();
+            $table->foreignId('expense_id')->nullable()->constrained();
             $table->foreignUuid('parent_transaction_id')->nullable()->constrained();
             $table->date('date');
             $table->string('description');

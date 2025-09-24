@@ -78,6 +78,11 @@ class StatementPeriod
         return new self(sprintf('%04d-%02d', $year, $month));
     }
 
+    public function isFuture(): bool
+    {
+        return $this > $this->current();
+    }
+
     public function value(): string
     {
         return $this->value;
