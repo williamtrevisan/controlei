@@ -26,6 +26,10 @@ class CardResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'last_four_digits';
 
+    protected static string|null|\UnitEnum $navigationGroup = 'Configurações';
+
+    protected static ?string $navigationLabel = 'Cartões';
+
     public static function form(Schema $schema): Schema
     {
         return CardForm::configure($schema);

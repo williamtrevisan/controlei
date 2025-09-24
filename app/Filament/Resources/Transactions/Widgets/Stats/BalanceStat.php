@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Transactions\Widgets\Stats;
 
+use App\Actions\GetAllExpenses;
 use App\Actions\GetAllExpenseTransactionsByStatementPeriod;
 use App\Actions\GetAllIncomeTransactionsByStatementPeriod;
 use App\Actions\GetProjectedMonthlyIncome;
@@ -20,9 +21,10 @@ class BalanceStat
     private StatementPeriod $statementPeriod;
 
     public function __construct(
-        private GetAllIncomeTransactionsByStatementPeriod $getIncomeTransactions,
+        private GetAllIncomeTransactionsByStatementPeriod $getAllIncomeTransactionsByStatementPeriod,
         private GetProjectedMonthlyIncome $getProjectedIncome,
-        private GetAllExpenseTransactionsByStatementPeriod $getExpenseTransactions
+        private GetAllExpenseTransactionsByStatementPeriod $getAllExpenseTransactionsByStatementPeriod,
+        private GetAllExpenses $getAllExpenses
     ) {}
 
     public function make(StatementPeriod $statementPeriod): Stat
@@ -30,7 +32,7 @@ class BalanceStat
         $this->statementPeriod = $statementPeriod;
 
         /** @var Money $incomes */
-        $incomes = ($incomeTransactions = $this->getIncomeTransactions
+        $incomes = ($incomeTransactions = $this->getAllIncomeTransactionsByStatementPeriod
             ->execute($statementPeriod))
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
         if ($incomes->isZero()) {
@@ -38,24 +40,26 @@ class BalanceStat
         }
 
         /** @var Money $expenses */
-        $expenses = ($expenseTransactions = $this->getExpenseTransactions
+        $expenses = ($expenseTransactions = $this->getAllExpenseTransactionsByStatementPeriod
             ->execute($statementPeriod))
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
+
+        if ($statementPeriod->isFuture()) {
+            $expenses = $expenses->plus($this->calculateProjectedExpenses($statementPeriod));
+        }
 
         $balance = $incomes->minus($expenses);
 
         return Stat::make('Saldo', $balance->formatTo('pt_BR'))
             ->icon($this->icon($balance))
             ->color($this->color($balance))
-            ->description($this->description($balance))
+            ->description($this->description($balance, $statementPeriod))
             ->chart($this->chart($incomeTransactions, $expenseTransactions));
     }
 
-    private function description(Money $balance): string
+    private function description(Money $balance, StatementPeriod $statementPeriod): string
     {
-        $previousBalance = $this->previousBalance();
-
-        if ($previousBalance->isZero()) {
+        if (($previousBalance = $this->previousBalance())->isZero()) {
             return 'Sem dados do período anterior';
         }
 
@@ -68,7 +72,7 @@ class BalanceStat
 
     private function previousBalance(): Money
     {
-        $previousIncomes = $this->getIncomeTransactions
+        $previousIncomes = $this->getAllIncomeTransactionsByStatementPeriod
             ->execute($this->statementPeriod->previous())
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
 
@@ -76,11 +80,34 @@ class BalanceStat
             $previousIncomes = $this->getProjectedIncome->execute();
         }
 
-        $previousExpenses = $this->getExpenseTransactions
+        $previousExpenses = $this->getAllExpenseTransactionsByStatementPeriod
             ->execute($this->statementPeriod->previous())
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
 
+        if ($this->statementPeriod->previous()->isFuture()) {
+            $previousExpenses = $previousExpenses->plus($this->calculateProjectedExpenses($this->statementPeriod->previous()));
+        }
+
         return $previousIncomes->minus($previousExpenses);
+    }
+
+    private function calculateProjectedExpenses(StatementPeriod $statementPeriod): Money
+    {
+        $expenseIdsWithTransactions = $this->getAllExpenseTransactionsByStatementPeriod
+            ->execute($statementPeriod)
+            ->whereNotNull('expense_id')
+            ->pluck('expense_id')
+            ->unique();
+
+        return $this->getAllExpenses->execute()
+            ->reject(fn ($expense) => $expenseIdsWithTransactions->contains($expense->id))
+            ->reduce(function (Money $carry, $expense) {
+                $monthlyProjection = $expense->getMonthlyProjection();
+
+                return $monthlyProjection
+                    ? $carry->plus($monthlyProjection)
+                    : $carry;
+            }, money()->of(0));
     }
 
     private function color(Money $balance): array

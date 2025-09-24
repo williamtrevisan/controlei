@@ -28,6 +28,7 @@ class TransactionData implements Arrayable
         public int $accountId,
         public ?int $cardId,
         public ?int $incomeSourceId,
+        public ?int $expenseId,
         public ?string $parentTransactionId,
         public Carbon $date,
         public string $description,
@@ -52,12 +53,14 @@ class TransactionData implements Arrayable
         int $accountId,
         ?int $cardId = null,
         ?int $incomeSourceId = null,
+        ?int $expenseId = null,
         ?string $statementPeriod = null
     ): self {
         return new self(
             accountId: $accountId,
             cardId: $cardId,
             incomeSourceId: $incomeSourceId,
+            expenseId: $expenseId,
             parentTransactionId: null,
             date: $transaction->date(),
             description: $transaction->description(),
@@ -82,6 +85,7 @@ class TransactionData implements Arrayable
             accountId: $transaction->account?->id,
             cardId: $transaction->card?->id,
             incomeSourceId: null,
+            expenseId: null,
             parentTransactionId: $transaction->id,
             date: $transaction->date,
             description: $transaction->description,
@@ -104,6 +108,7 @@ class TransactionData implements Arrayable
             'account_id' => $this->accountId,
             'card_id' => $this->cardId,
             'income_source_id' => $this->incomeSourceId,
+            'expense_id' => $this->expenseId,
             'parent_transaction_id' => $this->parentTransactionId,
             'date' => $this->date,
             'description' => $this->description,
