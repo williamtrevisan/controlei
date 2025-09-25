@@ -40,7 +40,11 @@ class ExpenseStat
             $previousExpenses = $previousExpenses->plus($this->calculateProjectedExpenses($statementPeriod->previous()));
         }
 
-        return Stat::make('Saídas', $expenses->formatTo('pt_BR'))
+        $formattedAmount = session()->get('hide_sensitive_data', false) 
+            ? str($expenses->formatTo('pt_BR'))->replaceMatches('/\d/', '*')
+            : $expenses->formatTo('pt_BR');
+
+        return Stat::make('Saídas', $formattedAmount)
             ->icon(Heroicon::OutlinedArrowTrendingDown)
             ->color(Color::Red)
             ->description($this->description($expenses, $previousExpenses, $statementPeriod))
@@ -57,7 +61,12 @@ class ExpenseStat
         $percentage = ($difference->getAmount()->toFloat() / $previousExpenses->getAmount()->toFloat()) * 100;
 
         $sign = $difference->isPositiveOrZero() ? '+' : '';
-        return sprintf('%+.1f%% (%s%s vs período anterior)', $percentage, $sign, $difference->formatTo('pt_BR'));
+        
+        $formattedDifference = session()->get('hide_sensitive_data', false)
+            ? str($difference->formatTo('pt_BR'))->replaceMatches('/\d/', '*')
+            : $difference->formatTo('pt_BR');
+
+        return sprintf('%+.1f%% (%s%s vs período anterior)', $percentage, $sign, $formattedDifference);
     }
 
     private function chart(Collection $transactions): Collection

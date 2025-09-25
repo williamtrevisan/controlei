@@ -9,9 +9,7 @@ use App\Filament\Imports\TransactionImporter;
 use App\Filament\Resources\Transactions\TransactionResource;
 use App\Filament\Resources\Transactions\Widgets\MonthlyStatement;
 use App\Jobs\FetchAndSynchronizeTransactions;
-use App\Jobs\ProcessTransactionInstallments;
 use App\Models\Synchronization;
-use App\Models\Transaction;
 use App\ValueObjects\StatementPeriod;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -24,13 +22,13 @@ use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Bus;
 
 class ListTransactions extends ListRecords
 {
     use ExposesTableToWidgets;
+
+    protected $listeners = ['privacy-toggled' => '$refresh'];
 
     protected static string $resource = TransactionResource::class;
 
@@ -49,6 +47,19 @@ class ListTransactions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('toggle_sensitive_data')
+                ->label('')
+                ->tooltip(fn() => session()->get('hide_sensitive_data', false) ? 'Mostrar valores' : 'Ocultar valores')
+                ->icon(fn() => session()->get('hide_sensitive_data', false) ? Heroicon::OutlinedEye : Heroicon::OutlinedEyeSlash)
+                ->color('gray')
+                ->action(function () {
+                    $isHidden = ! session()->get('hide_sensitive_data', false);
+
+                    session()->put('hide_sensitive_data', $isHidden);
+
+                    $this->dispatch('privacy-toggled', hideData: $isHidden);
+                }),
+
             Action::make('synchronize')
                 ->label('Sincronizar transações')
                 ->icon(Heroicon::OutlinedArrowPath)

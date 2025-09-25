@@ -14,6 +14,8 @@ class MonthlyStatement extends StatsOverviewWidget
 {
     use InteractsWithPageTable;
 
+    protected $listeners = ['privacy-toggled' => '$refresh'];
+
     protected function getTablePage(): string
     {
         return ListTransactions::class;

@@ -23,9 +23,15 @@ class TransactionsTable
                 TextColumn::make('amount')
                     ->label('Valor')
                     ->getStateUsing(function (Transaction $transaction) {
-                        return $transaction->direction->isInflow()
+                        $amount = $transaction->direction->isInflow()
                             ? $transaction->amount->formatTo('pt_BR')
                             : $transaction->amount->negated()->formatTo('pt_BR');
+                        
+                        if (session()->get('hide_sensitive_data', false)) {
+                            return str($amount)->replaceMatches('/\d/', '*');
+                        }
+                        
+                        return $amount;
                     })
                     ->money(currency: 'BRL', locale: 'pt_BR')
                     ->color(function (Transaction $transaction) {
