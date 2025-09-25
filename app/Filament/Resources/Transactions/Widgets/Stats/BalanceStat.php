@@ -50,7 +50,11 @@ class BalanceStat
 
         $balance = $incomes->minus($expenses);
 
-        return Stat::make('Saldo', $balance->formatTo('pt_BR'))
+        $formattedAmount = session()->get('hide_sensitive_data', false) 
+            ? str($balance->formatTo('pt_BR'))->replaceMatches('/\d/', '*')
+            : $balance->formatTo('pt_BR');
+
+        return Stat::make('Saldo', $formattedAmount)
             ->icon($this->icon($balance))
             ->color($this->color($balance))
             ->description($this->description($balance, $statementPeriod))
@@ -67,7 +71,12 @@ class BalanceStat
         $percentage = ($difference->getAmount()->toFloat() / abs($previousBalance->getAmount()->toFloat())) * 100;
 
         $sign = $difference->isPositiveOrZero() ? '+' : '';
-        return sprintf('%+.1f%% (%s%s vs período anterior)', $percentage, $sign, $difference->formatTo('pt_BR'));
+        
+        $formattedDifference = session()->get('hide_sensitive_data', false)
+            ? str($difference->formatTo('pt_BR'))->replaceMatches('/\d/', '*')
+            : $difference->formatTo('pt_BR');
+
+        return sprintf('%+.1f%% (%s%s vs período anterior)', $percentage, $sign, $formattedDifference);
     }
 
     private function previousBalance(): Money

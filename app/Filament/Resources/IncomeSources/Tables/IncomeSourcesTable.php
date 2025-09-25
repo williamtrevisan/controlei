@@ -31,7 +31,17 @@ class IncomeSourcesTable
 
                 TextColumn::make('average_amount')
                     ->label('Média mensal')
-                    ->getStateUsing(fn (IncomeSource $incomeSource) => $incomeSource->average_amount?->formatTo('pt_BR') ?? 'Não definido')
+                    ->getStateUsing(function (IncomeSource $incomeSource) {
+                        if (!$incomeSource->average_amount) {
+                            return 'Não definido';
+                        }
+                        
+                        $amount = $incomeSource->average_amount->formatTo('pt_BR');
+                        
+                        return session()->get('hide_sensitive_data', false) 
+                            ? str($amount)->replaceMatches('/\d/', '*')
+                            : $amount;
+                    })
                     ->alignEnd()
                     ->sortable(),
 
