@@ -18,6 +18,7 @@ class GetAllBankTransactions
     public function __construct(
         private readonly GetAllIncomeSource $getAllIncomeSource,
         private readonly GetAllExpenses $getAllExpenses,
+        private readonly CategorizeTransaction $categorizeTransaction,
         private readonly FindOrCreateAccount $findOrCreateAccount,
         private readonly FindOrCreateCard $findOrCreateCard
     ) {
@@ -46,10 +47,14 @@ class GetAllBankTransactions
         });
     }
 
-    private function toTransactionData(Account $account, Collection $incomeSources, Collection $expenses, int $dueDay): Closure
-    {
+    private function toTransactionData(
+        Account $account,
+        Collection $incomeSources,
+        Collection $expenses,
+        int $dueDay,
+    ): Closure {
         return function (Transaction $transaction) use ($account, $incomeSources, $expenses, $dueDay): TransactionData {
-            return TransactionData::from(
+            $data = TransactionData::from(
                 transaction: $transaction,
                 accountId: $account->id,
                 incomeSourceId: $transaction->direction()->isInflow()
@@ -64,6 +69,10 @@ class GetAllBankTransactions
                     : null,
                 statementPeriod: $this->generateStatementPeriod($transaction, $dueDay),
             );
+
+            $data->categoryId = $this->categoryId($data);
+
+            return $data;
         };
     }
 
@@ -87,8 +96,23 @@ class GetAllBankTransactions
         return $dueDate->format('Y-m');
     }
 
-    private function processCardTransactions(Account $account, Collection $incomeSources, Collection $expenses, Collection $bankCards): Closure
+    private function categoryId(TransactionData $transaction): ?int
     {
+        if (! $transaction->direction->isOutflow()) {
+            return null;
+        }
+
+        return $this->categorizeTransaction
+            ->execute($transaction)
+            ->id;
+    }
+
+    private function processCardTransactions(
+        Account $account,
+        Collection $incomeSources,
+        Collection $expenses,
+        Collection $bankCards
+    ): Closure {
         return function (Card $bankCard) use ($account, $incomeSources, $expenses, $bankCards): Collection {
             return $bankCard->statements()
                 ->all()
@@ -100,7 +124,7 @@ class GetAllBankTransactions
 
                             return $holder->transactions()
                                 ->map(function (Transaction $transaction) use ($account, $card, $incomeSources, $expenses): TransactionData {
-                                    return TransactionData::from(
+                                    $data = TransactionData::from(
                                         transaction: $transaction,
                                         accountId: $account->id,
                                         cardId: $card->id,
@@ -116,6 +140,10 @@ class GetAllBankTransactions
                                             : null,
                                         statementPeriod: $transaction->statementPeriod(),
                                     );
+
+                                    $data->categoryId = $this->categoryId($data);
+
+                                    return $data;
                                 });
                         });
                 });

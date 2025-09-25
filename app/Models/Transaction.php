@@ -28,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property ?int $card_id
  * @property ?int $income_source_id
  * @property ?int $expense_id
+ * @property ?int $category_id
  * @property ?string $parent_transaction_id
  * @property Carbon $date
  * @property string $description
@@ -49,6 +50,7 @@ use Illuminate\Support\Carbon;
  * @property-read ?Card $card
  * @property-read ?IncomeSource $incomeSource
  * @property-read ?Expense $expense
+ * @property-read ?Category $category
  * @property-read ?Transaction $parent
  * @property-read ?Transaction $child
  */
@@ -66,6 +68,7 @@ class Transaction extends Model
         'card_id',
         'income_source_id',
         'expense_id',
+        'category_id',
         'parent_transaction_id',
         'date',
         'description',
@@ -144,6 +147,11 @@ class Transaction extends Model
     public function expense(): BelongsTo
     {
         return $this->belongsTo(Expense::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 
     public function parent(): BelongsTo

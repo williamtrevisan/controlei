@@ -9,9 +9,7 @@ use App\Filament\Imports\TransactionImporter;
 use App\Filament\Resources\Transactions\TransactionResource;
 use App\Filament\Resources\Transactions\Widgets\MonthlyStatement;
 use App\Jobs\FetchAndSynchronizeTransactions;
-use App\Jobs\ProcessTransactionInstallments;
 use App\Models\Synchronization;
-use App\Models\Transaction;
 use App\ValueObjects\StatementPeriod;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -24,8 +22,6 @@ use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Bus;
 
 class ListTransactions extends ListRecords
@@ -69,7 +65,8 @@ class ListTransactions extends ListRecords
                     ])
                         ->name('syncing transactions')
                         ->onQueue('default')
-                        ->onConnection('database')
+//                        ->onConnection('database')
+                        ->onConnection('sync')
                         ->allowFailures()
                         ->finally(function () use ($synchronization): void {
                             $synchronization->touch('completed_at');

@@ -5,7 +5,7 @@ namespace App\Repositories;
 use App\DataTransferObjects\CardData;
 use App\Models\Card;
 use App\Repositories\Contracts\CardRepository;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
