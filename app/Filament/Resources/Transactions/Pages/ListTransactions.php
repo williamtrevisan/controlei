@@ -28,6 +28,8 @@ class ListTransactions extends ListRecords
 {
     use ExposesTableToWidgets;
 
+    protected $listeners = ['privacy-toggled' => '$refresh'];
+
     protected static string $resource = TransactionResource::class;
 
     public function mount(): void
@@ -45,6 +47,19 @@ class ListTransactions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('toggle_sensitive_data')
+                ->label('')
+                ->tooltip(fn() => session()->get('hide_sensitive_data', false) ? 'Mostrar valores' : 'Ocultar valores')
+                ->icon(fn() => session()->get('hide_sensitive_data', false) ? Heroicon::OutlinedEye : Heroicon::OutlinedEyeSlash)
+                ->color('gray')
+                ->action(function () {
+                    $isHidden = ! session()->get('hide_sensitive_data', false);
+
+                    session()->put('hide_sensitive_data', $isHidden);
+
+                    $this->dispatch('privacy-toggled', hideData: $isHidden);
+                }),
+
             Action::make('synchronize')
                 ->label('Sincronizar transações')
                 ->icon(Heroicon::OutlinedArrowPath)

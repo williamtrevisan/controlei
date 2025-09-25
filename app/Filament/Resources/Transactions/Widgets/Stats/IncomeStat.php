@@ -38,7 +38,11 @@ class IncomeStat
             ->execute($statementPeriod->previous())
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
 
-        return Stat::make('Entradas', $incomes->formatTo('pt_BR'))
+        $formattedAmount = session()->get('hide_sensitive_data', false) 
+            ? str($incomes->formatTo('pt_BR'))->replaceMatches('/\d/', '*')
+            : $incomes->formatTo('pt_BR');
+
+        return Stat::make('Entradas', $formattedAmount)
             ->icon(Heroicon::OutlinedArrowTrendingUp)
             ->color($this->isProjection ? Color::Blue : Color::Green)
             ->description($this->description($incomes, $previousIncomes))
@@ -60,7 +64,12 @@ class IncomeStat
         $percentage = ($difference->getAmount()->toFloat() / $previousIncomes->getAmount()->toFloat()) * 100;
 
         $sign = $difference->isPositiveOrZero() ? '+' : '';
-        return sprintf('%+.1f%% (%s%s vs período anterior)', $percentage, $sign, $difference->formatTo('pt_BR'));
+        
+        $formattedDifference = session()->get('hide_sensitive_data', false)
+            ? str($difference->formatTo('pt_BR'))->replaceMatches('/\d/', '*')
+            : $difference->formatTo('pt_BR');
+
+        return sprintf('%+.1f%% (%s%s vs período anterior)', $percentage, $sign, $formattedDifference);
     }
 
     private function chart(Collection $transactions): Collection

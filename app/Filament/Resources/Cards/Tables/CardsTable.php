@@ -34,7 +34,17 @@ class CardsTable
 
                 TextColumn::make('limit')
                     ->label('Limite')
-                    ->getStateUsing(fn (Card $card) => $card->limit?->formatTo('pt_BR'))
+                    ->getStateUsing(function (Card $card) {
+                        if (!$card->limit) {
+                            return null;
+                        }
+                        
+                        $amount = $card->limit->formatTo('pt_BR');
+
+                        return session()->get('hide_sensitive_data', false) 
+                            ? str($amount)->replaceMatches('/\d/', '*')
+                            : $amount;
+                    })
                     ->money('BRL')
                     ->alignEnd()
                     ->sortable(),
