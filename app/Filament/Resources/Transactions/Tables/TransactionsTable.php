@@ -28,7 +28,7 @@ class TransactionsTable
                             : $transaction->amount->negated()->formatTo('pt_BR');
                         
                         if (session()->get('hide_sensitive_data', false)) {
-                            return str($amount)->replaceMatches('/\d/', '*');
+                            return '****';
                         }
                         
                         return $amount;

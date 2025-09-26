@@ -51,7 +51,7 @@ class BalanceStat
         $balance = $incomes->minus($expenses);
 
         $formattedAmount = session()->get('hide_sensitive_data', false) 
-            ? str($balance->formatTo('pt_BR'))->replaceMatches('/\d/', '*')
+            ? '****'
             : $balance->formatTo('pt_BR');
 
         return Stat::make('Saldo', $formattedAmount)
@@ -73,7 +73,7 @@ class BalanceStat
         $sign = $difference->isPositiveOrZero() ? '+' : '';
         
         $formattedDifference = session()->get('hide_sensitive_data', false)
-            ? str($difference->formatTo('pt_BR'))->replaceMatches('/\d/', '*')
+            ? '****'
             : $difference->formatTo('pt_BR');
 
         return sprintf('%+.1f%% (%s%s vs período anterior)', $percentage, $sign, $formattedDifference);

@@ -50,7 +50,7 @@ class ListTransactions extends ListRecords
             Action::make('toggle_sensitive_data')
                 ->label('')
                 ->tooltip(fn() => session()->get('hide_sensitive_data', false) ? 'Mostrar valores' : 'Ocultar valores')
-                ->icon(fn() => session()->get('hide_sensitive_data', false) ? Heroicon::OutlinedEye : Heroicon::OutlinedEyeSlash)
+                ->icon(fn() => session()->get('hide_sensitive_data', false) ? Heroicon::OutlinedEyeSlash : Heroicon::OutlinedEye)
                 ->color('gray')
                 ->action(function () {
                     $isHidden = ! session()->get('hide_sensitive_data', false);

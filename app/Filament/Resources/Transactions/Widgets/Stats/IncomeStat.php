@@ -39,7 +39,7 @@ class IncomeStat
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
 
         $formattedAmount = session()->get('hide_sensitive_data', false) 
-            ? str($incomes->formatTo('pt_BR'))->replaceMatches('/\d/', '*')
+            ? '****'
             : $incomes->formatTo('pt_BR');
 
         return Stat::make('Entradas', $formattedAmount)
@@ -66,7 +66,7 @@ class IncomeStat
         $sign = $difference->isPositiveOrZero() ? '+' : '';
         
         $formattedDifference = session()->get('hide_sensitive_data', false)
-            ? str($difference->formatTo('pt_BR'))->replaceMatches('/\d/', '*')
+            ? '****'
             : $difference->formatTo('pt_BR');
 
         return sprintf('%+.1f%% (%s%s vs período anterior)', $percentage, $sign, $formattedDifference);

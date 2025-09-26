@@ -39,7 +39,7 @@ class IncomeSourcesTable
                         $amount = $incomeSource->average_amount->formatTo('pt_BR');
                         
                         return session()->get('hide_sensitive_data', false) 
-                            ? str($amount)->replaceMatches('/\d/', '*')
+                            ? '****'
                             : $amount;
                     })
                     ->alignEnd()
