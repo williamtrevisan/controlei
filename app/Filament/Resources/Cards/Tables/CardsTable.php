@@ -42,7 +42,7 @@ class CardsTable
                         $amount = $card->limit->formatTo('pt_BR');
 
                         return session()->get('hide_sensitive_data', false) 
-                            ? str($amount)->replaceMatches('/\d/', '*')
+                            ? '****'
                             : $amount;
                     })
                     ->money('BRL')

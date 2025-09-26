@@ -28,7 +28,7 @@ class ExpensesTable
                         $amount = $expense->average_amount->formatTo('pt_BR');
                         
                         return session()->get('hide_sensitive_data', false) 
-                            ? str($amount)->replaceMatches('/\d/', '*')
+                            ? '****'
                             : $amount;
                     })
                     ->alignEnd()
@@ -43,7 +43,7 @@ class ExpensesTable
                         }
 
                         return session()->get('hide_sensitive_data', false) 
-                            ? str($amount)->replaceMatches('/\d/', '*')
+                            ? '****'
                             : $amount;
                     })
                     ->alignEnd()
