@@ -9,7 +9,6 @@ use Filament\Notifications\Notification;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -57,11 +56,6 @@ class InvitesTable
                     ->color(Color::Green)
                     ->tooltip(fn ($record) => $record->accepted_at?->format('d/m/Y H:i'))
                     ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                SelectFilter::make('status')
-                    ->label('Status')
-                    ->options(InvitationStatus::class),
             ])
             ->groupedBulkActions([
                 BulkAction::make('accept_invites')
