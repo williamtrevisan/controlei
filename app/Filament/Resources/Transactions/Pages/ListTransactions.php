@@ -114,6 +114,11 @@ class ListTransactions extends ListRecords
                         ->placeholder('******'),
                 ]),
 
+            CreateAction::make()
+                ->label('Novo registro')
+                ->icon(Heroicon::OutlinedPlus)
+                ->color('gray'),
+
             ActionGroup::make([
                 ImportAction::make()
                     ->label('Importar transações')

@@ -35,4 +35,15 @@ class CreateTransaction extends CreateRecord
     {
         return 'Gasto compartilhado criado com sucesso!';
     }
+
+    protected function handleRecordCreation(array $data): Model
+    {
+        return parent::handleRecordCreation(array_merge($data, [
+            'account_id' => Card::query()->find($data['card_id'])->account->id,
+            'direction' => TransactionDirection::Outflow,
+            'kind' => TransactionKind::Purchase,
+            'payment_method' => TransactionPaymentMethod::Credit,
+            'statement_period' => (new StatementPeriod())->current()->rewind($data['current_installment'] - 1),
+        ]));
+    }
 }

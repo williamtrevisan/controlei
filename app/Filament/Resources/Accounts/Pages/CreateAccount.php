@@ -24,4 +24,11 @@ class CreateAccount extends CreateRecord
     {
         return 'Adicione uma nova conta financeira ao seu sistema de gestão.';
     }
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['user_id'] = auth()->id();
+        
+        return $data;
+    }
 }
