@@ -7,10 +7,12 @@ use App\Enums\AccountType;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
+ * @property int $user_id
  * @property AccountBank $bank
  * @property ?string $agency
  * @property ?string $account
@@ -24,6 +26,7 @@ class Account extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'type',
         'bank',
         'agency',
@@ -54,5 +57,10 @@ class Account extends Model
     public function cards(): HasMany
     {
         return $this->hasMany(Card::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

@@ -19,7 +19,10 @@ class CardEloquentRepository implements CardRepository
     protected function builder(): Builder
     {
         return $this->model
-            ->newQuery();
+            ->newQuery()
+            ->whereHas('account', function (Builder $query) {
+                $query->where('user_id', auth()->id());
+            });
     }
 
     public function findOrCreate(CardData $card): Card

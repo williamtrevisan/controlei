@@ -11,6 +11,7 @@ class GetProjectedMonthlyIncome
     public function execute(): Money
     {
         return IncomeSource::query()
+            ->where('user_id', auth()->id())
             ->where('active', true)
             ->where('frequency', IncomeFrequency::Monthly->value)
             ->whereNotNull('average_amount')

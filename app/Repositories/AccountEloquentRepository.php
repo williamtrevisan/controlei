@@ -19,7 +19,8 @@ class AccountEloquentRepository implements AccountRepository
     protected function builder(): Builder
     {
         return $this->model
-            ->newQuery();
+            ->newQuery()
+            ->where('user_id', auth()->id());
     }
 
     public function findOrCreateByBank(
@@ -31,6 +32,7 @@ class AccountEloquentRepository implements AccountRepository
     ): Account {
         return Account::query()
             ->firstOrCreate([
+                'user_id' => auth()->id(),
                 'bank' => $bank->value,
                 'agency' => $agency,
                 'account' => $account,

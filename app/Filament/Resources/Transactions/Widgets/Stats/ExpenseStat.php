@@ -71,6 +71,11 @@ class ExpenseStat
 
     private function chart(Collection $transactions): Collection
     {
+        if ($transactions->isEmpty()) {
+            return collect()
+                ->times(7, fn (): int => 0);
+        }
+
         return $this->aggregateByDay($transactions)
             ->map(fn (Money $amount) => $amount->getMinorAmount()->toInt())
             ->sortKeys();

@@ -3,10 +3,14 @@
 namespace App\Providers\Filament;
 
 use Carbon\Carbon;
+use Filament\Actions\Action;
+use Filament\Forms\Components\TextInput;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
+use Filament\Notifications\Notification;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -28,6 +32,8 @@ class DashboardPanelProvider extends PanelProvider
             ->id('dashboard')
             ->path('dashboard')
             ->login()
+            ->registration()
+            ->profile(isSimple: false)
             ->colors([
                 'primary' => Color::Purple,
             ])

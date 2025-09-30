@@ -6,6 +6,7 @@ use App\Enums\TransactionStatus;
 use App\Models\Transaction;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Alignment;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -70,7 +71,8 @@ class TransactionsTable
                     ->width('100%'),
             ])
             ->striped()
-            ->emptyStateHeading('Nenhuma transação disponível.')
-            ->emptyStateDescription('Realize a importação de suas transações para começar.');
+            ->emptyStateHeading('Nenhuma transação encontrada.')
+            ->emptyStateDescription('Sincronize com seu banco ou importe suas transações para começar. Contas e cartões serão criados automaticamente.')
+            ->emptyStateIcon(Heroicon::OutlinedArrowTrendingUp);
     }
 }

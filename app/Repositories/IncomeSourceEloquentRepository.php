@@ -18,12 +18,13 @@ class IncomeSourceEloquentRepository implements IncomeSourceRepository
     protected function builder(): Builder
     {
         return $this->model
-            ->newQuery();
+            ->newQuery()
+            ->where('user_id', auth()->id());
     }
 
     public function getActiveForMatching(): Collection
     {
-        return IncomeSource::query()
+        return $this->builder()
             ->where('active', true)
             ->get(['id', 'matcher_regex']);
     }
