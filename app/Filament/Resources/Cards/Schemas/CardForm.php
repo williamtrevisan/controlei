@@ -31,7 +31,7 @@ class CardForm
                             ->schema([
                                  Select::make('account_id')
                                      ->label('Conta')
-                                     ->relationship('account', 'id')
+                                     ->relationship('account', 'id', fn ($query) => $query->where('user_id', auth()->id()))
                                      ->getOptionLabelFromRecordUsing(fn (Account $account) => $account->account_number)
                                      ->required()
                                      ->placeholder('Selecione a conta a qual o cartão é pertencente'),
