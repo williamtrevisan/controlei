@@ -77,10 +77,6 @@ class TransactionsTable
                     ->tooltip(fn ($state) => str($state)->length() > 60 ? $state : null)
                     ->width('100%'),
             ])
-            ->striped()
-            ->checkIfRecordIsSelectableUsing(function (Transaction $record) {
-                return $record->account->user_id === auth()->id();
-            })
             ->groupedBulkActions([
                 BulkAction::make('share')
                     ->label('Compartilhar transações')
@@ -103,15 +99,15 @@ class TransactionsTable
                             ->helperText('Apenas usuários conectados através de convites aceitos aparecem nesta lista. Para conectar-se com novos usuários, acesse o menu "Convites".'),
                     ])
                     ->action(function (Collection $records, array $data) {
-                        $member = User::find($data['user_id']);
+                        $shareWithUser = User::find($data['user_id']);
 
                         app()->make(ShareManyTransactionsWithUser::class)
-                            ->execute($records, $member);
+                            ->execute($records, $shareWithUser);
 
                         Notification::make()
                             ->success()
-                            ->title('Transações compartilhadas!')
-                            ->body("Transações foram compartilhadas com {$member->name}.")
+                            ->title('Compartilhamento realizado com sucesso!')
+                            ->body("Transações compartilhadas com $shareWithUser->name, incluindo todas as parcelas relacionadas.")
                             ->send();
                     })
                     ->deselectRecordsAfterCompletion()
@@ -122,6 +118,10 @@ class TransactionsTable
                             ->isNotEmpty();
                     }),
             ])
+            ->checkIfRecordIsSelectableUsing(function (Transaction $record) {
+                return $record->account->user_id === auth()->id();
+            })
+            ->striped()
             ->emptyStateHeading('Nenhuma transação encontrada.')
             ->emptyStateDescription('Sincronize com seu banco ou importe suas transações para começar. Contas e cartões serão criados automaticamente.')
             ->emptyStateIcon(Heroicon::OutlinedArrowTrendingUp);

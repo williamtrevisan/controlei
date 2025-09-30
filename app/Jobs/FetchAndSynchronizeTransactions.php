@@ -51,6 +51,7 @@ class FetchAndSynchronizeTransactions implements ShouldQueue
         try {
             $jobs = $getAllBankTransactions
                 ->execute($this->token)
+                ->dump()
                 ->chunk(100)
                 ->map(fn (LazyCollection $chunk) => new SynchronizeTransactions($this->synchronization, $chunk));
             if ($jobs->isEmpty()) {
