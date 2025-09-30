@@ -3,17 +3,13 @@
 namespace App\Filament\Resources\Cards\Schemas;
 
 use App\Enums\CardBrand;
-use App\Enums\CardOwner;
 use App\Enums\CardType;
 use App\Models\Account;
 use App\Models\Card;
-use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 
@@ -35,28 +31,6 @@ class CardForm
                                      ->getOptionLabelFromRecordUsing(fn (Account $account) => $account->account_number)
                                      ->required()
                                      ->placeholder('Selecione a conta a qual o cartão é pertencente'),
-
-                                 Checkbox::make('is_shared')
-                                     ->label('Este cartão pertence a outra pessoa')
-                                     ->formatStateUsing(fn (?Card $card) => $card?->owner)
-                                     ->live()
-                                     ->afterStateUpdated(function (Get $get, Set $set) {
-                                         if ($get('is_shared')) {
-                                             return;
-                                         }
-
-                                         $set('owner', null);
-                                     })
-                                     ->helperText('Marque se este cartão será usado para gastos compartilhados'),
-
-                                 Select::make('owner')
-                                     ->label('Proprietário do cartão')
-                                     ->options(CardOwner::class)
-                                     ->placeholder('Selecione o proprietário')
-                                     ->visible(fn (Get $get) => $get('is_shared'))
-                                     ->required(fn (Get $get) => $get('is_shared'))
-                                     ->searchable()
-                                     ->helperText('Este cartão será usado para gastos compartilhados'),
 
                                 TextInput::make('last_four_digits')
                                     ->label('Últimos quatro digitos')

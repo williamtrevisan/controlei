@@ -17,9 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('limit')->default(0);
             $table->unsignedTinyInteger('due_day')->default(1);
             $table->string('matcher_regex')->nullable();
-            $table->enum('owner', ['dad', 'mom', 'brother', 'sister', 'partner', 'friend'])->nullable();
             $table->timestamps();
-            
+
             $table->unique(['account_id', 'last_four_digits']);
         });
     }
