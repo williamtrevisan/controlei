@@ -18,5 +18,5 @@ interface CardRepository
     /**
      * @return Collection<int, Card>
      */
-    public function findSharedCards(): Collection;
+    public function getAllUserCards(): Collection;
 }

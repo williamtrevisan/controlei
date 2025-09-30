@@ -2,11 +2,10 @@
 
 namespace App\Actions;
 
-use App\Models\Card;
 use App\Repositories\Contracts\CardRepository;
 use Illuminate\Support\Collection;
 
-class GetAllSharedCards
+class GetAllUserCards
 {
     public function __construct(
         private readonly CardRepository $cardRepository
@@ -14,6 +13,6 @@ class GetAllSharedCards
 
     public function execute(): Collection
     {
-        return $this->cardRepository->findSharedCards();
+        return $this->cardRepository->getAllUserCards();
     }
 }

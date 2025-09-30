@@ -18,17 +18,17 @@ class CreateTransaction extends CreateRecord
 
     public function getBreadcrumb(): string
     {
-        return 'Novo gasto compartilhado';
+        return 'Nova transação';
     }
 
     public function getTitle(): string|Htmlable
     {
-        return 'Crie seu gasto compartilhado';
+        return 'Criar nova transação';
     }
 
     public function getSubheading(): string|Htmlable|null
     {
-        return 'Registre uma compra feita no cartão de outra pessoa que você vai reembolsar.';
+        return 'Registre uma compra feita com seu cartão de crédito.';
     }
 
     protected function getCreatedNotificationTitle(): ?string

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Transactions\Schemas;
 
-use App\Actions\GetAllSharedCards;
+use App\Actions\GetAllUserCards;
 use App\Models\Card;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -28,7 +28,7 @@ class TransactionForm
                                 Select::make('card_id')
                                     ->label('Cartão')
                                     ->options(function () {
-                                        return app()->make(GetAllSharedCards::class)
+                                        return app()->make(GetAllUserCards::class)
                                             ->execute()
                                             ->mapWithKeys(fn (Card $card): array => [
                                                 $card->id => $card->last_four_digits
@@ -36,8 +36,7 @@ class TransactionForm
                                     })
                                     ->required()
                                     ->placeholder('Selecione o cartão usado na compra')
-                                    ->searchable()
-                                    ->helperText('Apenas cartões compartilhados aparecem aqui'),
+                                    ->searchable(),
 
                                 DatePicker::make('date')
                                     ->label('Data da compra')

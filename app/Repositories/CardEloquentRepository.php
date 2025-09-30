@@ -53,10 +53,13 @@ class CardEloquentRepository implements CardRepository
     /**
      * @return Collection<int, Card>
      */
-    public function findSharedCards(): Collection
+    public function getAllUserCards(): Collection
     {
         return $this->builder()
-            ->whereNotNull('owner')
+            ->whereHas('account', function ($query) {
+                $query->where('user_id', auth()->id());
+            })
+            ->with('account')
             ->get();
     }
 }

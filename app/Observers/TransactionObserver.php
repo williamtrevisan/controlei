@@ -20,6 +20,12 @@ class TransactionObserver
             return;
         }
 
+        $transaction->current_installment = 1;
         $transaction->hash = $hash;
+    }
+
+    public function created(Transaction $transaction): void
+    {
+        $this->createFutureTransactions->execute($transaction);
     }
 }
