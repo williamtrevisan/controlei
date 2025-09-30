@@ -41,4 +41,32 @@ class User extends Authenticatable
     {
         return $this->hasMany(Account::class);
     }
+
+    public function inviteCode(): string
+    {
+        $nextId = User::query()->max('id') + 1;
+
+        $hash = hash('sha256', implode('|', [
+            $nextId,
+            config('app.key'),
+            now()->timestamp
+        ]));
+
+        $code = strtoupper(substr($hash, 0, 13));
+        $formatted = substr($code, 0, 3) . '-' . substr($code, 3, 4) . '-' . substr($code, 7, 6);
+
+        while (User::query()->where('invite_code', $formatted)->exists()) {
+            $hash = hash('sha256', implode('|', [
+                $nextId,
+                config('app.key'),
+                now()->timestamp,
+                rand(1000, 9999)
+            ]));
+
+            $code = strtoupper(substr($hash, 0, 13));
+            $formatted = substr($code, 0, 3) . '-' . substr($code, 3, 4) . '-' . substr($code, 7, 6);
+        }
+
+        return $formatted;
+    }
 }
