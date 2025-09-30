@@ -35,8 +35,8 @@ class AccountsTable
                     ->searchable(['account', 'account_digit']),
             ])
             ->striped()
-            ->emptyStateHeading('Nenhuma conta disponível.')
-            ->emptyStateDescription('Realize a criação de suas contas para começar.')
-            ->emptyStateIcon(Heroicon::OutlinedCreditCard);
+            ->emptyStateHeading('Nenhuma conta cadastrada.')
+            ->emptyStateDescription('Crie sua primeira conta bancária para começar a gerenciar suas transações financeiras.')
+            ->emptyStateIcon(Heroicon::OutlinedBuildingLibrary);
     }
 }

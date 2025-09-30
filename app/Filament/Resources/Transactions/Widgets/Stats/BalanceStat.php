@@ -147,6 +147,11 @@ class BalanceStat
 
     private function chart(Collection $incomes, Collection $expenses): Collection
     {
+        if ($incomes->isEmpty() && $expenses->isEmpty()) {
+            return collect()
+                ->times(7, fn (): int => 0);
+        }
+
         $incomesByDay = $this->aggregateByDay($incomes);
         $expensesByDay = $this->aggregateByDay($expenses);
 

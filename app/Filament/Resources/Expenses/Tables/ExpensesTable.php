@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Expenses\Tables;
 
 use App\Models\Expense;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -52,6 +53,10 @@ class ExpensesTable
                 IconColumn::make('active')
                     ->label('Status')
                     ->boolean(),
-            ]);
+            ])
+            ->striped()
+            ->emptyStateHeading('Nenhuma despesa cadastrada.')
+            ->emptyStateDescription('Crie uma conta primeiro e depois cadastre suas despesas para acompanhar seus gastos mensais.')
+            ->emptyStateIcon(Heroicon::OutlinedArrowTrendingDown);
     }
 }

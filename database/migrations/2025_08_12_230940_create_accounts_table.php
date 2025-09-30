@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->enum('type', ['checking', 'savings', 'wallet', 'investment']);
             $table->string('bank');
             $table->string('agency', 4);
@@ -17,7 +18,7 @@ return new class extends Migration
             $table->string('account_digit', 1);
             $table->timestamps();
 
-            $table->unique(['bank', 'agency', 'account', 'account_digit']);
+            $table->unique(['user_id', 'bank', 'agency', 'account', 'account_digit']);
         });
     }
 };

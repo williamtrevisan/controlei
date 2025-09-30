@@ -49,12 +49,16 @@ class IncomeSourcesTable
                     ->label('Status')
                     ->boolean(),
             ])
+            ->striped()
             ->toolbarActions([
                 BulkAction::make('reclassify')
                     ->label('Reclassificar as transações')
                     ->icon(Heroicon::ArrowPath)
                     ->color('gray')
                     ->action(fn () => app()->make(ClassifyTransactions::class)->execute()),
-            ]);
+            ])
+            ->emptyStateHeading('Nenhuma fonte de renda cadastrada.')
+            ->emptyStateDescription('Crie uma conta primeiro e depois cadastre suas fontes de renda para acompanhar suas entradas mensais.')
+            ->emptyStateIcon(Heroicon::OutlinedBanknotes);
     }
 }
