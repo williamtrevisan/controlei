@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Enums\InvitationStatus;
 use App\Models\Invite;
+use App\Models\User;
 use App\Repositories\Contracts\InviteRepository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -61,5 +62,30 @@ class InviteEloquentRepository implements InviteRepository
             ->where('accepted_at', '>=', now()->subDays($days))
             ->orderBy('accepted_at')
             ->get();
+    }
+
+    /**
+     * @param int $userId
+     * @return Collection<int, User>
+     */
+    public function findConnectedUsers(int $userId): Collection
+    {
+        $usersWhoAcceptedMyInvites = $this->builder()
+            ->where('inviter_id', $userId)
+            ->where('status', InvitationStatus::Accepted)
+            ->with('invitee')
+            ->get()
+            ->pluck('invitee');
+
+        $usersWhoseInvitesIAccepted = $this->builder()
+            ->where('invitee_id', $userId)
+            ->where('status', InvitationStatus::Accepted)
+            ->with('inviter')
+            ->get()
+            ->pluck('inviter');
+        
+        return $usersWhoAcceptedMyInvites
+            ->merge($usersWhoseInvitesIAccepted)
+            ->unique('id');
     }
 }

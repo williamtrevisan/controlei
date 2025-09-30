@@ -44,8 +44,13 @@ class TransactionResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->whereHas('account', function (Builder $query) {
-                $query->where('user_id', auth()->id());
+            ->where(function (Builder $query) {
+                $query->whereHas('account', function (Builder $subQuery) {
+                    $subQuery->where('user_id', auth()->id());
+                })
+                ->orWhereHas('members', function (Builder $subQuery) {
+                    $subQuery->where('member_id', auth()->id());
+                });
             });
     }
 
