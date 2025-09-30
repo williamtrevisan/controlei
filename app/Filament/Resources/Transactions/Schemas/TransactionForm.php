@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Transactions\Schemas;
 
-use App\Actions\GetAllCards;
+use App\Actions\GetAllUserCards;
 use App\Models\Card;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -28,7 +28,7 @@ class TransactionForm
                                 Select::make('card_id')
                                     ->label('Cartão')
                                     ->options(function () {
-                                        return app()->make(GetAllCards::class)
+                                        return app()->make(GetAllUserCards::class)
                                             ->execute()
                                             ->mapWithKeys(fn (Card $card): array => [
                                                 $card->id => $card->last_four_digits
