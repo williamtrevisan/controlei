@@ -6,12 +6,10 @@ use App\Enums\TransactionDirection;
 use App\Enums\TransactionKind;
 use App\Enums\TransactionPaymentMethod;
 use App\Enums\TransactionStatus;
-use App\Models\Transaction;
 use App\ValueObjects\StatementPeriod;
 use Banklink\Entities;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class TransactionData implements Arrayable
@@ -70,34 +68,9 @@ class TransactionData implements Arrayable
             paymentMethod: $transaction->paymentMethod(),
             currentInstallment: $transaction->installments()?->current(),
             totalInstallments: $transaction->installments()?->total(),
-            status: TransactionStatus::Paid,
+            status: (new StatementPeriod($statementPeriod))->isFuture() ? TransactionStatus::Scheduled : TransactionStatus::Paid,
             matcherRegex: null,
             statementPeriod: $statementPeriod,
-        );
-    }
-
-    public static function fromEntity(
-        Transaction $transaction,
-        int $installment,
-        StatementPeriod $statementPeriod
-    ): self {
-        return new self(
-            accountId: $transaction->account?->id,
-            cardId: $transaction->card?->id,
-            incomeSourceId: null,
-            expenseId: null,
-            parentTransactionId: $transaction->id,
-            date: $transaction->date,
-            description: $transaction->description,
-            amount: $transaction->amount->getMinorAmount()->toInt(),
-            direction: $transaction->direction,
-            kind: $transaction->kind,
-            paymentMethod: $transaction->payment_method,
-            currentInstallment: $installment,
-            totalInstallments: $transaction->total_installments,
-            status: $installment > $transaction->getRelation('lastPaidInstallment') ? TransactionStatus::Scheduled : TransactionStatus::Paid,
-            matcherRegex: null,
-            statementPeriod: $statementPeriod->value(),
         );
     }
 

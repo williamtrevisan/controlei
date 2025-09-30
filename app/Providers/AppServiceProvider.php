@@ -7,16 +7,19 @@ use App\Models\Card;
 use App\Models\IncomeSource;
 use App\Models\Invite;
 use App\Models\Transaction;
+use App\Models\TransactionMember;
 use App\Repositories\AccountEloquentRepository;
 use App\Repositories\CardEloquentRepository;
 use App\Repositories\Contracts\AccountRepository;
 use App\Repositories\Contracts\CardRepository;
 use App\Repositories\Contracts\IncomeSourceRepository;
 use App\Repositories\Contracts\InviteRepository;
+use App\Repositories\Contracts\TransactionMemberRepository;
 use App\Repositories\Contracts\TransactionRepository;
 use App\Repositories\IncomeSourceEloquentRepository;
 use App\Repositories\InviteEloquentRepository;
 use App\Repositories\TransactionEloquentRepository;
+use App\Repositories\TransactionMemberEloquentRepository;
 use App\Services\Contracts;
 use App\Services\InstallmentGenerator;
 use Filament\Pages\Page;
@@ -39,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(CardRepository::class, fn () => new CardEloquentRepository(new Card()));
         $this->app->singleton(TransactionRepository::class, fn () => new TransactionEloquentRepository(new Transaction()));
         $this->app->singleton(InviteRepository::class, fn () => new InviteEloquentRepository(new Invite()));
+        $this->app->singleton(TransactionMemberRepository::class, fn () => new TransactionMemberEloquentRepository(new TransactionMember()));
     }
 
     public function boot(): void

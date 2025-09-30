@@ -114,11 +114,6 @@ class ListTransactions extends ListRecords
                         ->placeholder('******'),
                 ]),
 
-            CreateAction::make('shared_expense')
-                ->label('Gasto compartilhado')
-                ->icon(Heroicon::OutlinedPlus)
-                ->color('gray'),
-
             ActionGroup::make([
                 ImportAction::make()
                     ->label('Importar transações')

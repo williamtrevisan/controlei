@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * @property string $id
@@ -51,6 +52,7 @@ use Illuminate\Support\Carbon;
  * @property-read ?Expense $expense
  * @property-read ?Transaction $parent
  * @property-read ?Transaction $child
+ * @property-read ?Collection<int, TransactionMember> $members
  */
 #[ObservedBy(TransactionObserver::class)]
 class Transaction extends Model
@@ -154,6 +156,11 @@ class Transaction extends Model
     public function child(): HasMany
     {
         return $this->hasMany(Transaction::class, 'parent_transaction_id');
+    }
+
+    public function members(): HasMany
+    {
+        return $this->hasMany(TransactionMember::class);
     }
 
     final public function classify(): self

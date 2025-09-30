@@ -42,6 +42,7 @@ class GetAllBankTransactions
                     $bankCards
                         ->flatMap($this->processCardTransactions($account, $incomeSources, $expenses, $bankCards))
                 )
+                ->pipe(fn (Collection $transactions) => $this->connectInstallments($transactions))
                 ->lazy();
         });
     }
@@ -120,5 +121,49 @@ class GetAllBankTransactions
                         });
                 });
         };
+    }
+
+    private function connectInstallments(Collection $transactions): Collection
+    {
+        $transactions
+            ->filter(fn (TransactionData $transaction) => $transaction->totalInstallments > 1)
+            ->groupBy(fn (TransactionData $transaction) => $this->getInstallmentSignature($transaction))
+            ->each(function (Collection $group) {
+                if ($group->count() <= 1) {
+                    return;
+                };
+
+                $parent = $group
+                    ->firstWhere('currentInstallment', 1);
+                if (! $parent) {
+                    $parent = $group->sortBy('currentInstallment')->first();
+                }
+
+                $group
+                    ->reject(fn (TransactionData $transaction) => $transaction->id === $parent->id)
+                    ->each(function (TransactionData $transaction) use ($parent) {
+                        $transaction->parentTransactionId = $parent->id;
+                    });
+            });
+
+        return $transactions;
+    }
+
+    private function getInstallmentSignature(TransactionData $transaction): string
+    {
+        return hash('sha256', implode('|', [
+            $transaction->accountId,
+            $transaction->cardId,
+            $this->description($transaction->description),
+            $transaction->amount,
+            $transaction->totalInstallments,
+        ]));
+    }
+
+    private function description(string $description): string
+    {
+        return str($description)
+            ->limit(15, '')
+            ->value();
     }
 }

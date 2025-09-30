@@ -20,14 +20,6 @@ class TransactionObserver
             return;
         }
 
-        $transaction->setRelation('lastPaidInstallment', $transaction->current_installment);
-
-        $transaction->current_installment = 1;
         $transaction->hash = $hash;
-    }
-
-    public function created(Transaction $transaction): void
-    {
-        $this->createFutureTransactions->execute($transaction);
     }
 }

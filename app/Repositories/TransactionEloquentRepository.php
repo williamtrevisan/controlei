@@ -23,8 +23,13 @@ class TransactionEloquentRepository implements TransactionRepository
     {
         return $this->model
             ->newQuery()
-            ->whereHas('account', function (Builder $query) {
-                $query->where('user_id', auth()->id());
+            ->where(function (Builder $query) {
+                $query->whereHas('account', function (Builder $subQuery) {
+                    $subQuery->where('user_id', auth()->id());
+                })
+                ->orWhereHas('members', function (Builder $subQuery) {
+                    $subQuery->where('member_id', auth()->id());
+                });
             });
     }
 
@@ -102,5 +107,22 @@ class TransactionEloquentRepository implements TransactionRepository
                 ->where('kind', 'purchase')
                 ->where('statement_period', $statementPeriod->value());
         });
+    }
+
+    /**
+     * @param Transaction $transaction
+     * @return Collection<int, Transaction>
+     */
+    public function getAllInstallments(Transaction $transaction): Collection
+    {
+        if ($transaction->parent_transaction_id) {
+            return Transaction::where('parent_transaction_id', $transaction->parent_transaction_id)
+                ->orWhere('id', $transaction->parent_transaction_id)
+                ->get();
+        }
+
+        return Transaction::where('parent_transaction_id', $transaction->id)
+            ->orWhere('id', $transaction->id)
+            ->get();
     }
 }

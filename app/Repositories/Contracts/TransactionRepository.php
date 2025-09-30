@@ -42,4 +42,10 @@ interface TransactionRepository
      * @return Collection<int, Transaction>
      */
     public function findExpensesByStatementPeriod(StatementPeriod $statementPeriod): Collection;
+
+    /**
+     * @param Transaction $transaction
+     * @return Collection<int, Transaction>
+     */
+    public function getAllInstallments(Transaction $transaction): Collection;
 }

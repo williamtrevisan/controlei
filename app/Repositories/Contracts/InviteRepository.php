@@ -26,4 +26,10 @@ interface InviteRepository
      * @return Collection<int, Invite>
      */
     public function findAcceptedByUserAndPeriod(int $userId, int $days): Collection;
+
+    /**
+     * @param int $userId
+     * @return Collection<int, User>
+     */
+    public function findConnectedUsers(int $userId): Collection;
 }
