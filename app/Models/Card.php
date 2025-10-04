@@ -8,6 +8,7 @@ use App\Enums\CardBrand;
 use App\Enums\CardType;
 use Brick\Money\Money;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,11 +24,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $due_day
  * @property-read int $closing_day
  * @property string $matcher_regex
+ *
+ * @property-read Account $account
  */
 class Card extends Model
 {
     /** @use HasFactory<\Database\Factories\CardFactory> */
     use HasFactory;
+    use HasUuids;
 
     protected $fillable = [
         'account_id',

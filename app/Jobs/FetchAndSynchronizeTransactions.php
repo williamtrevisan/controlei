@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Actions\GetAllBankTransactions;
 use App\Models\Synchronization;
+use App\Pipelines\TransactionSynchronization\GetAllBankTransactions;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -51,7 +51,6 @@ class FetchAndSynchronizeTransactions implements ShouldQueue
         try {
             $jobs = $getAllBankTransactions
                 ->execute($this->token)
-                ->dump()
                 ->chunk(100)
                 ->map(fn (LazyCollection $chunk) => new SynchronizeTransactions($this->synchronization, $chunk));
             if ($jobs->isEmpty()) {

@@ -5,7 +5,8 @@ namespace App\Repositories;
 use App\DataTransferObjects\CardData;
 use App\Models\Card;
 use App\Repositories\Contracts\CardRepository;
-use Illuminate\Database\Eloquent\Builder;
+use Closure;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
@@ -38,6 +39,32 @@ class CardEloquentRepository implements CardRepository
                 'due_day' => $card->dueDay,
                 'matcher_regex' => $card->matcherRegex,
             ]);
+    }
+
+    /**
+     * @param Collection<int, CardData> $values
+     * @return bool
+     */
+    public function createMany(Collection $values): bool
+    {
+        return $this->builder()
+            ->insert($values->toArray());
+    }
+
+    /**
+     * @param string|Closure $column
+     * @param mixed $value
+     * @return Collection<int, Card>
+     */
+    public function findManyBy(string|\Closure $column, mixed $value = null): Collection
+    {
+        return $this->builder()
+            ->when(
+                $column instanceof Closure,
+                fn (Builder $query) => $column($query),
+                fn (Builder $query) => $query->where($column, $value)
+            )
+            ->get();
     }
 
     /**

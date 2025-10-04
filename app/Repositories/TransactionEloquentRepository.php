@@ -84,7 +84,7 @@ class TransactionEloquentRepository implements TransactionRepository
         return $this->findManyBy(function (Builder $query) use ($statementPeriod) {
             $query
                 ->where('direction', 'inflow')
-                ->where('statement_period', $statementPeriod->value());
+                ->whereHas('statement', fn ($q) => $q->where('period', $statementPeriod->value()));
         });
     }
 
@@ -105,7 +105,7 @@ class TransactionEloquentRepository implements TransactionRepository
                         });
                 })
                 ->where('kind', 'purchase')
-                ->where('statement_period', $statementPeriod->value());
+                ->whereHas('statement', fn ($q) => $q->where('period', $statementPeriod->value()));
         });
     }
 

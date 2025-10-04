@@ -10,6 +10,11 @@ class StatementPeriod
     {
     }
 
+    public static function fromDate(Carbon $date): StatementPeriod
+    {
+        return new StatementPeriod($date->format('Y-m'));
+    }
+
     public function current(): self
     {
         $year = now()->year;

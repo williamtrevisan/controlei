@@ -29,6 +29,7 @@ use Illuminate\Support\Collection;
  * @property ?int $card_id
  * @property ?int $income_source_id
  * @property ?int $expense_id
+ * @property ?string $statement_id
  * @property ?string $parent_transaction_id
  * @property Carbon $date
  * @property string $description
@@ -38,12 +39,12 @@ use Illuminate\Support\Collection;
  * @property TransactionPaymentMethod $payment_method
  * @property int $current_installment
  * @property int $total_installments
- * @property StatementPeriod $statement_period
  * @property TransactionStatus $status
  * @property ?string $matcher_regex
  * @property string $hash
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * 
  * @property-read string $remaining_installments
  * @property-read string $installments
  * @property-read ?Account $account
@@ -53,6 +54,7 @@ use Illuminate\Support\Collection;
  * @property-read ?Transaction $parent
  * @property-read ?Transaction $child
  * @property-read ?Collection<int, TransactionMember> $members
+ * @property-read ?Statement $statement
  */
 #[ObservedBy(TransactionObserver::class)]
 class Transaction extends Model
@@ -68,6 +70,7 @@ class Transaction extends Model
         'card_id',
         'income_source_id',
         'expense_id',
+        'statement_id',
         'parent_transaction_id',
         'date',
         'description',
@@ -77,7 +80,6 @@ class Transaction extends Model
         'payment_method',
         'current_installment',
         'total_installments',
-        'statement_period',
         'status',
         'matcher_regex',
         'hash'
@@ -123,7 +125,6 @@ class Transaction extends Model
             'direction' => TransactionDirection::class,
             'kind' => TransactionKind::class,
             'payment_method' => TransactionPaymentMethod::class,
-            'statement_period' => AsStatementPeriod::class,
             'status' => TransactionStatus::class,
         ];
     }
@@ -161,6 +162,11 @@ class Transaction extends Model
     public function members(): HasMany
     {
         return $this->hasMany(TransactionMember::class);
+    }
+
+    public function statement(): BelongsTo
+    {
+        return $this->belongsTo(Statement::class);
     }
 
     final public function classify(): self

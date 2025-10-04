@@ -31,6 +31,7 @@ class DashboardPanelProvider extends PanelProvider
             ->default()
             ->id('dashboard')
             ->path('dashboard')
+            ->topbar(condition: false)
             ->login()
             ->registration()
             ->profile(isSimple: false)

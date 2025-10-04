@@ -23,11 +23,11 @@ class InviteEloquentRepository implements InviteRepository
     }
 
     /**
-     * @param int $userId
+     * @param string $userId
      * @param int $days
      * @return Collection<int, Invite>
      */
-    public function findSentByUserAndPeriod(int $userId, int $days): Collection
+    public function findSentByUserAndPeriod(string $userId, int $days): Collection
     {
         return $this->builder()
             ->where('inviter_id', $userId)
@@ -37,10 +37,10 @@ class InviteEloquentRepository implements InviteRepository
     }
 
     /**
-     * @param int $userId
+     * @param string $userId
      * @return Collection<int, Invite>
      */
-    public function findPendingByUser(int $userId): Collection
+    public function findPendingByUser(string $userId): Collection
     {
         return $this->builder()
             ->where('inviter_id', $userId)
@@ -50,11 +50,11 @@ class InviteEloquentRepository implements InviteRepository
     }
 
     /**
-     * @param int $userId
+     * @param string $userId
      * @param int $days
      * @return Collection<int, Invite>
      */
-    public function findAcceptedByUserAndPeriod(int $userId, int $days): Collection
+    public function findAcceptedByUserAndPeriod(string $userId, int $days): Collection
     {
         return $this->builder()
             ->where('inviter_id', $userId)
@@ -65,10 +65,10 @@ class InviteEloquentRepository implements InviteRepository
     }
 
     /**
-     * @param int $userId
+     * @param string $userId
      * @return Collection<int, User>
      */
-    public function findConnectedUsers(int $userId): Collection
+    public function findConnectedUsers(string $userId): Collection
     {
         $usersWhoAcceptedMyInvites = $this->builder()
             ->where('inviter_id', $userId)
@@ -83,7 +83,7 @@ class InviteEloquentRepository implements InviteRepository
             ->with('inviter')
             ->get()
             ->pluck('inviter');
-        
+
         return $usersWhoAcceptedMyInvites
             ->merge($usersWhoseInvitesIAccepted)
             ->unique('id');
