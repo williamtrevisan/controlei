@@ -22,6 +22,7 @@ use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Bus;
 
 class ListTransactions extends ListRecords
@@ -151,23 +152,28 @@ class ListTransactions extends ListRecords
 
         return [
             $current->previous()->value() => Tab::make((string) $current->previous())
-                ->query(fn ($query) => $query->where('statement_period', $current->previous()->value()))
+                ->query(function (Builder $query) use ($current): void {
+                    $query
+                        ->whereHas('statement', function (Builder $query) use ($current): void {
+                            $query->where('period', $current->previous()->value());
+                        });
+                })
                 ->icon(Heroicon::OutlinedLockClosed),
 
             $current->value() => Tab::make((string) $current)
-                ->query(fn ($query) => $query->where('statement_period', $current->value()))
+                ->query(fn (Builder $query) => $query->whereHas('statement', fn ($q) => $q->where('period', $current->value())))
                 ->icon(Heroicon::OutlinedLockOpen),
 
             $current->next()->value() => Tab::make((string) $current->next())
-                ->query(fn ($query) => $query->where('statement_period', $current->next()->value()))
+                ->query(fn (Builder $query) => $query->whereHas('statement', fn ($q) => $q->where('period', $current->next()->value())))
                 ->icon(Heroicon::OutlinedClock),
 
             $current->advance(2)->value() => Tab::make((string) $current->advance(2))
-                ->query(fn ($query) => $query->where('statement_period', $current->advance(2)->value()))
+                ->query(fn (Builder $query) => $query->whereHas('statement', fn ($q) => $q->where('period', $current->advance(2)->value())))
                 ->icon(Heroicon::OutlinedClock),
 
             $current->advance(3)->value() => Tab::make((string) $current->advance(3))
-                ->query(fn ($query) => $query->where('statement_period', $current->advance(3)->value()))
+                ->query(fn (Builder $query) => $query->whereHas('statement', fn ($q) => $q->where('period', $current->advance(3)->value())))
                 ->icon(Heroicon::OutlinedClock),
         ];
     }

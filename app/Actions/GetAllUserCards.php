@@ -5,11 +5,12 @@ namespace App\Actions;
 use App\Repositories\Contracts\CardRepository;
 use Illuminate\Support\Collection;
 
-class GetAllUserCards
+readonly class GetAllUserCards
 {
     public function __construct(
-        private readonly CardRepository $cardRepository
-    ) {}
+        private CardRepository $cardRepository
+    ) {
+    }
 
     public function execute(): Collection
     {

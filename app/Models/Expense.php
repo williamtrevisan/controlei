@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\AsMoney;
 use App\Enums\ExpenseFrequency;
 use Brick\Money\Money;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,7 @@ class Expense extends Model
 {
     /** @use HasFactory<\Database\Factories\ExpenseFactory> */
     use HasFactory;
+    use HasUuids;
 
     protected $fillable = [
         'user_id',

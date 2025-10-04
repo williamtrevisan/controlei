@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Transactions\Widgets\Stats;
 
-use App\Actions\GetAllExpenses;
+use App\Actions\GetAllUserExpenses;
 use App\Actions\GetAllExpenseTransactionsByStatementPeriod;
 use App\Filament\Resources\Transactions\Widgets\Concerns\AggregatesTransactions;
 use App\ValueObjects\StatementPeriod;
@@ -18,7 +18,7 @@ class ExpenseStat
 
     public function __construct(
         private GetAllExpenseTransactionsByStatementPeriod $getAllExpenseTransactionsByStatementPeriod,
-        private GetAllExpenses $getAllExpenses
+        private GetAllUserExpenses $getAllExpenses
     ) {}
 
     public function make(StatementPeriod $statementPeriod): Stat
@@ -40,7 +40,7 @@ class ExpenseStat
             $previousExpenses = $previousExpenses->plus($this->calculateProjectedExpenses($statementPeriod->previous()));
         }
 
-        $formattedAmount = session()->get('hide_sensitive_data', false) 
+        $formattedAmount = session()->get('hide_sensitive_data', false)
             ? '****'
             : $expenses->formatTo('pt_BR');
 
@@ -61,7 +61,7 @@ class ExpenseStat
         $percentage = ($difference->getAmount()->toFloat() / $previousExpenses->getAmount()->toFloat()) * 100;
 
         $sign = $difference->isPositiveOrZero() ? '+' : '';
-        
+
         $formattedDifference = session()->get('hide_sensitive_data', false)
             ? '****'
             : $difference->formatTo('pt_BR');

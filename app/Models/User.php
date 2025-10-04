@@ -5,17 +5,25 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Observers\UserObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property string $id,
+ * @property string $name,
+ * @property string $email,
+ * @property string $invite_code,
+ */
 #[ObservedBy(UserObserver::class)]
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
     use Notifiable;
+    use HasUuids;
 
     protected $fillable = [
         'name',
@@ -44,10 +52,8 @@ class User extends Authenticatable
 
     public function inviteCode(): string
     {
-        $nextId = User::query()->max('id') + 1;
-
         $hash = hash('sha256', implode('|', [
-            $nextId,
+            $this->id,
             config('app.key'),
             now()->timestamp
         ]));
@@ -57,7 +63,7 @@ class User extends Authenticatable
 
         while (User::query()->where('invite_code', $formatted)->exists()) {
             $hash = hash('sha256', implode('|', [
-                $nextId,
+                $this->id,
                 config('app.key'),
                 now()->timestamp,
                 rand(1000, 9999)

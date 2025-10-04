@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Filament\Imports\TransactionSynchronizer;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;

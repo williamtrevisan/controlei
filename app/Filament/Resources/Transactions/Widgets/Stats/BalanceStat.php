@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Transactions\Widgets\Stats;
 
-use App\Actions\GetAllExpenses;
+use App\Actions\GetAllUserExpenses;
 use App\Actions\GetAllExpenseTransactionsByStatementPeriod;
 use App\Actions\GetAllIncomeTransactionsByStatementPeriod;
 use App\Actions\GetProjectedMonthlyIncome;
@@ -24,7 +24,7 @@ class BalanceStat
         private GetAllIncomeTransactionsByStatementPeriod $getAllIncomeTransactionsByStatementPeriod,
         private GetProjectedMonthlyIncome $getProjectedIncome,
         private GetAllExpenseTransactionsByStatementPeriod $getAllExpenseTransactionsByStatementPeriod,
-        private GetAllExpenses $getAllExpenses
+        private GetAllUserExpenses $getAllExpenses
     ) {}
 
     public function make(StatementPeriod $statementPeriod): Stat
@@ -50,7 +50,7 @@ class BalanceStat
 
         $balance = $incomes->minus($expenses);
 
-        $formattedAmount = session()->get('hide_sensitive_data', false) 
+        $formattedAmount = session()->get('hide_sensitive_data', false)
             ? '****'
             : $balance->formatTo('pt_BR');
 
@@ -71,7 +71,7 @@ class BalanceStat
         $percentage = ($difference->getAmount()->toFloat() / abs($previousBalance->getAmount()->toFloat())) * 100;
 
         $sign = $difference->isPositiveOrZero() ? '+' : '';
-        
+
         $formattedDifference = session()->get('hide_sensitive_data', false)
             ? '****'
             : $difference->formatTo('pt_BR');
