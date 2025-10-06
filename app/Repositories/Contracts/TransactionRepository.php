@@ -36,12 +36,29 @@ interface TransactionRepository
      * @return Collection<int, Transaction>
      */
     public function findIncomesByStatementPeriod(StatementPeriod $statementPeriod): Collection;
-    
+
     /**
      * @param StatementPeriod $statementPeriod
      * @return Collection<int, Transaction>
      */
     public function findExpensesByStatementPeriod(StatementPeriod $statementPeriod): Collection;
+
+    /**
+     * @return Collection<int, Transaction>
+     */
+    public function incomes(): Collection;
+
+    /**
+     * @return Collection<int, Transaction>
+     */
+    public function expenses(): Collection;
+
+    /**
+     * @param Transaction $transaction
+     * @param array<string, mixed> $attributes
+     * @return bool
+     */
+    public function update(Transaction $transaction, array $attributes): bool;
 
     /**
      * @param Transaction $transaction

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Invites\Pages;
 
+use App\Actions\GetAllUserReceivedInvites;
+use App\Actions\GetAllUserSentInvites;
 use App\Filament\Resources\Invites\InviteResource;
 use App\Filament\Resources\Invites\Widgets\InviteOverviewWidget;
 use Filament\Actions\Action;
@@ -56,38 +58,28 @@ class ListInvites extends ListRecords
 
     public function getTabs(): array
     {
+        $received = app()->make(GetAllUserReceivedInvites::class)->execute();
+        $sent = app()->make(GetAllUserSentInvites::class)->execute();
+
         return [
             'received' => Tab::make('Recebidos')
                 ->icon(Heroicon::OutlinedInboxArrowDown)
-                ->badge(fn () => $this->getReceivedInvitesCount())
+                ->badge(fn () => $received->count())
                 ->badgeColor(fn (Tab $tab) => $this->activeTab === 'received' ? 'primary' : 'gray')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('invitee_id', auth()->id())),
+                ->query(fn (Builder $query) => $query->where('invitee_id', auth()->id())),
 
             'sent' => Tab::make('Enviados')
+                ->formatStateUsing(fn () => [])
                 ->icon(Heroicon::OutlinedPaperAirplane)
-                ->badge(fn () => $this->getSentInvitesCount())
+                ->badge(fn () => $sent->count())
                 ->badgeColor(fn (Tab $tab) => $this->activeTab === 'sent' ? 'primary' : 'gray')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('inviter_id', auth()->id())),
+                ->query(fn (Builder $query) => $query->where('inviter_id', auth()->id())),
         ];
     }
 
     public function getDefaultActiveTab(): string | int | null
     {
         return 'received';
-    }
-
-    protected function getReceivedInvitesCount(): int
-    {
-        return InviteResource::getEloquentQuery()
-            ->where('invitee_id', auth()->id())
-            ->count();
-    }
-
-    protected function getSentInvitesCount(): int
-    {
-        return InviteResource::getEloquentQuery()
-            ->where('inviter_id', auth()->id())
-            ->count();
     }
 
     protected function getHeaderWidgets(): array

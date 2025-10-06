@@ -26,6 +26,6 @@ class TransactionObserver
 
     public function created(Transaction $transaction): void
     {
-        $this->createFutureTransactions->execute($transaction);
+        $this->createFutureTransactions->execute($transaction->load('statement'));
     }
 }

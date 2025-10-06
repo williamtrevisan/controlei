@@ -44,7 +44,7 @@ use Illuminate\Support\Collection;
  * @property string $hash
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * 
+ *
  * @property-read string $remaining_installments
  * @property-read string $installments
  * @property-read ?Account $account

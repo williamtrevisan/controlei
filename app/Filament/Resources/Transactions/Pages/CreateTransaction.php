@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Transactions\Pages;
 
-use App\Actions\GetOrCreateStatementForTransaction;
+use App\Actions\FindOrCreateManyStatements;
 use App\Enums\TransactionDirection;
 use App\Enums\TransactionKind;
 use App\Enums\TransactionPaymentMethod;
@@ -11,6 +11,7 @@ use App\Models\Card;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class CreateTransaction extends CreateRecord
 {
@@ -39,8 +40,8 @@ class CreateTransaction extends CreateRecord
     protected function handleRecordCreation(array $data): Model
     {
         $card = Card::query()->find($data['card_id']);
-        $statement = app()->make(GetOrCreateStatementForTransaction::class)
-            ->execute($card, now());
+        $statement = app()->make(FindOrCreateManyStatements::class)
+            ->execute($card, Carbon::parse($data['date']), $data['total_installments'] ?? 1);
 
         return parent::handleRecordCreation(array_merge($data, [
             'account_id' => $card->account->id,

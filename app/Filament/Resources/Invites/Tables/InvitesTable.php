@@ -32,7 +32,7 @@ class InvitesTable
                     ->color(Color::Gray),
 
                 TextColumn::make('status')
-                    ->label('Status')
+                    ->label('Situação')
                     ->badge()
                     ->color(fn (InvitationStatus $state): string => match ($state) {
                         InvitationStatus::Pending => 'warning',
@@ -42,20 +42,11 @@ class InvitesTable
                     }),
 
                 TextColumn::make('created_at')
-                    ->label('Recebido em')
+                    ->label('Recebido')
                     ->since()
                     ->sortable()
                     ->color(Color::Gray)
                     ->tooltip(fn ($record) => $record->created_at->format('d/m/Y H:i')),
-
-                TextColumn::make('accepted_at')
-                    ->label('Respondido em')
-                    ->since()
-                    ->sortable()
-                    ->placeholder('—')
-                    ->color(Color::Green)
-                    ->tooltip(fn ($record) => $record->accepted_at?->format('d/m/Y H:i'))
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->groupedBulkActions([
                 BulkAction::make('accept_invites')

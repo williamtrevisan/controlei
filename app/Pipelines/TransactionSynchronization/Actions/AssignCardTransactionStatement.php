@@ -32,7 +32,7 @@ readonly class AssignCardTransactionStatement
 
                 $statement = $statements
                     ->first(function (Statement $statement) use ($transaction): bool {
-                        return $statement->period === $transaction->statement()->period()->value();
+                        return $statement->period->value() === $transaction->statement()->period()->value();
                     });
 
                 return $statement

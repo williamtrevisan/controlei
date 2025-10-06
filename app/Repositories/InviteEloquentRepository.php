@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Repositories\Contracts\InviteRepository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class InviteEloquentRepository implements InviteRepository
@@ -23,43 +24,62 @@ class InviteEloquentRepository implements InviteRepository
     }
 
     /**
-     * @param string $userId
-     * @param int $days
      * @return Collection<int, Invite>
      */
-    public function findSentByUserAndPeriod(string $userId, int $days): Collection
+    public function received(): Collection
     {
         return $this->builder()
-            ->where('inviter_id', $userId)
-            ->where('created_at', '>=', now()->subDays($days))
+            ->where('invitee_id', auth()->id())
             ->orderBy('created_at')
             ->get();
     }
 
     /**
-     * @param string $userId
      * @return Collection<int, Invite>
      */
-    public function findPendingByUser(string $userId): Collection
+    public function sent(): Collection
     {
         return $this->builder()
-            ->where('inviter_id', $userId)
+            ->where('inviter_id', auth()->id())
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    /**
+     * @param Carbon $date
+     * @return Collection<int, Invite>
+     */
+    public function sentByPeriod(Carbon $date): Collection
+    {
+        return $this->builder()
+            ->where('inviter_id', auth()->id())
+            ->where('created_at', '>=', $date)
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, Invite>
+     */
+    public function pending(): Collection
+    {
+        return $this->builder()
+            ->where('inviter_id', auth()->id())
             ->where('status', InvitationStatus::Pending)
             ->orderBy('created_at')
             ->get();
     }
 
     /**
-     * @param string $userId
-     * @param int $days
+     * @param Carbon $date
      * @return Collection<int, Invite>
      */
-    public function findAcceptedByUserAndPeriod(string $userId, int $days): Collection
+    public function acceptedByPeriod(Carbon $date): Collection
     {
         return $this->builder()
-            ->where('inviter_id', $userId)
+            ->where('inviter_id', auth()->id())
             ->where('status', InvitationStatus::Accepted)
-            ->where('accepted_at', '>=', now()->subDays($days))
+            ->where('accepted_at', '>=', $date)
             ->orderBy('accepted_at')
             ->get();
     }

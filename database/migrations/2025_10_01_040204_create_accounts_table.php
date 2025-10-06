@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('agency', 4);
             $table->string('account', 5);
             $table->string('account_digit', 1);
+            $table->unsignedBigInteger('balance')->default(0);
             $table->timestamps();
 
             $table->unique(['user_id', 'bank', 'agency', 'account', 'account_digit']);

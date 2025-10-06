@@ -78,12 +78,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/williamtrevisan/banklink.git",
-                "reference": "870b8382f6e2a08fe68d2695e4461449b4d911c3"
+                "reference": "0ba51bf2a4d91c1802d30e9ac5ce4ad7e7b21de7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/williamtrevisan/banklink/zipball/870b8382f6e2a08fe68d2695e4461449b4d911c3",
-                "reference": "870b8382f6e2a08fe68d2695e4461449b4d911c3",
+                "url": "https://api.github.com/repos/williamtrevisan/banklink/zipball/0ba51bf2a4d91c1802d30e9ac5ce4ad7e7b21de7",
+                "reference": "0ba51bf2a4d91c1802d30e9ac5ce4ad7e7b21de7",
                 "shasum": ""
             },
             "require": {
@@ -181,7 +181,7 @@
                     "url": "https://github.com/banklink"
                 }
             ],
-            "time": "2025-10-03T21:11:44+00:00"
+            "time": "2025-10-06T05:34:15+00:00"
         },
         {
             "name": "blade-ui-kit/blade-heroicons",

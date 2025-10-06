@@ -14,6 +14,6 @@ class GetAllUserIncomeSource
 
     public function execute(): Collection
     {
-        return $this->incomeSourceRepository->getActiveForMatching();
+        return $this->incomeSourceRepository->actives();
     }
 }

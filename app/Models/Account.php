@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Casts\AsMoney;
 use App\Enums\AccountBank;
 use App\Enums\AccountType;
+use Brick\Money\Money;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property ?string $agency
  * @property ?string $account
  * @property ?string $account_digit
+ * @property Money $balance
  * @property AccountType $type
  * @property-read string $account_number
  */
@@ -34,6 +37,7 @@ class Account extends Model
         'agency',
         'account',
         'account_digit',
+        'balance'
     ];
 
     protected function accountNumber(): Attribute
@@ -46,6 +50,7 @@ class Account extends Model
     protected function casts()
     {
         return [
+            'balance' => AsMoney::class,
             'type' => AccountType::class,
             'bank' => AccountBank::class,
         ];

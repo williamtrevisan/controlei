@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Transactions\Widgets;
 
 use App\Filament\Resources\Transactions\Pages\ListTransactions;
-use App\Filament\Resources\Transactions\Widgets\Stats\BalanceStat;
+use App\Filament\Resources\Transactions\Widgets\Stats\MonthlyBalanceStat;
 use App\Filament\Resources\Transactions\Widgets\Stats\ExpenseStat;
 use App\Filament\Resources\Transactions\Widgets\Stats\IncomeStat;
 use App\ValueObjects\StatementPeriod;
@@ -30,12 +30,15 @@ class MonthlyStatement extends StatsOverviewWidget
         return [
             app()->make(IncomeStat::class)->make($statementPeriod),
             app()->make(ExpenseStat::class)->make($statementPeriod),
-            app()->make(BalanceStat::class)->make($statementPeriod),
+            app()->make(MonthlyBalanceStat::class)->make($statementPeriod),
         ];
     }
 
     public function getColumns(): int|array|null
     {
-        return ['default' => 1, 'md' => 3];
+        return [
+            'default' => 1,
+            'md' => 3,
+        ];
     }
 }

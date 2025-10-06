@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\AsMoney;
+use App\Casts\AsStatementPeriod;
 use App\Enums\StatementStatus;
 use App\ValueObjects\StatementPeriod;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -19,7 +20,7 @@ use Illuminate\Support\Collection;
  * @property int $account_id
  * @property ?int $card_id
  * @property ?string $parent_statement_id
- * @property string $period
+ * @property StatementPeriod $period
  * @property Carbon $closing_date
  * @property Carbon $due_date
  * @property StatementStatus $status
@@ -54,6 +55,7 @@ class Statement extends Model
         'due_date' => 'date',
         'amount' => AsMoney::class,
         'status' => StatementStatus::class,
+        'period' => AsStatementPeriod::class,
     ];
 
     public function period(Carbon $date): StatementPeriod

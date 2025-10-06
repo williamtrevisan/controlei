@@ -16,8 +16,8 @@ class TransactionMemberData implements Arrayable
 
     public function __construct(
         public string $transactionId,
-        public int $ownerId,
-        public int $memberId,
+        public string $ownerId,
+        public string $memberId,
         public Carbon $sharedAt,
     ) {
         $this->id = Str::uuid7()->toString();
@@ -27,8 +27,8 @@ class TransactionMemberData implements Arrayable
 
     public static function from(
         string $transactionId,
-        int $ownerId,
-        int $memberId,
+        string $ownerId,
+        string $memberId,
         ?Carbon $sharedAt = null,
     ): self {
         return new self(

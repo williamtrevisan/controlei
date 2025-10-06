@@ -26,7 +26,7 @@ class InviteForm
                                     ->label('Código do usuário')
                                     ->required()
                                     ->maxLength(15)
-                                    ->mask('***-****-*****')
+                                    ->mask('***-****-******')
                                     ->extraInputAttributes(['oninput' => 'this.value = this.value.toUpperCase()'])
                                     ->placeholder('ABC-1234-DEF456')
                                     ->helperText('Digite o código do usuário que você deseja convidar'),

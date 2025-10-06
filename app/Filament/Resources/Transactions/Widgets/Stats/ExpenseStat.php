@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Transactions\Widgets\Stats;
 use App\Actions\GetAllUserExpenses;
 use App\Actions\GetAllExpenseTransactionsByStatementPeriod;
 use App\Filament\Resources\Transactions\Widgets\Concerns\AggregatesTransactions;
+use App\Models\Expense;
 use App\ValueObjects\StatementPeriod;
 use Brick\Money\Money;
 use Filament\Support\Colors\Color;
@@ -18,7 +19,7 @@ class ExpenseStat
 
     public function __construct(
         private GetAllExpenseTransactionsByStatementPeriod $getAllExpenseTransactionsByStatementPeriod,
-        private GetAllUserExpenses $getAllExpenses
+        private GetAllUserExpenses $getAllUserExpenses
     ) {}
 
     public function make(StatementPeriod $statementPeriod): Stat
@@ -28,7 +29,7 @@ class ExpenseStat
             ->execute($statementPeriod))
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
 
-        if ($statementPeriod->isFuture()) {
+        if (! $statementPeriod->isPast()) {
             $expenses = $expenses->plus($this->calculateProjectedExpenses($statementPeriod));
         }
 
@@ -36,7 +37,7 @@ class ExpenseStat
             ->execute($statementPeriod->previous())
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
 
-        if ($statementPeriod->previous()->isFuture()) {
+        if ($statementPeriod->previous()->isPast()) {
             $previousExpenses = $previousExpenses->plus($this->calculateProjectedExpenses($statementPeriod->previous()));
         }
 
@@ -89,10 +90,10 @@ class ExpenseStat
             ->pluck('expense_id')
             ->unique();
 
-        return $this->getAllExpenses
+        return $this->getAllUserExpenses
             ->execute()
-            ->reject(fn ($expense) => $expenseIdsWithTransactions->contains($expense->id))
-            ->reduce(function (Money $carry, $expense) {
+            ->reject(fn (Expense $expense) => $expenseIdsWithTransactions->contains($expense->id))
+            ->reduce(function (Money $carry, Expense $expense) {
                 $monthlyProjection = $expense->getMonthlyProjection();
 
                 return $monthlyProjection

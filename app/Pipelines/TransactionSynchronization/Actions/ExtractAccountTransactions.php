@@ -12,7 +12,7 @@ class ExtractAccountTransactions
         $transactions = $data->bank
             ->account()
             ->transactions()
-            ->between(now()->startOfYear(), now())
+            ->between(now()->subYear(), now())
             ->lazy();
 
         return $next($data->withAccountTransactions($transactions));

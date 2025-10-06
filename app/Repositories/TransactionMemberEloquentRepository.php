@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\DataTransferObjects\TransactionMemberData;
 use App\Models\TransactionMember;
 use App\Repositories\Contracts\TransactionMemberRepository;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,7 +25,7 @@ class TransactionMemberEloquentRepository implements TransactionMemberRepository
      * @param int $memberId
      * @return Collection<int, TransactionMember>
      */
-    public function findAlreadyShared(Collection $transactionIds, int $memberId): Collection
+    public function findAlreadyShared(Collection $transactionIds, string $memberId): Collection
     {
         return $this->builder()
             ->whereIn('transaction_id', $transactionIds)

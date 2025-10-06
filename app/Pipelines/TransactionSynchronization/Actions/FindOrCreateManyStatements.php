@@ -41,7 +41,7 @@ final readonly class FindOrCreateManyStatements
             ->reject(function (StatementData $data) use ($existingStatements): bool {
                 return $existingStatements->contains(function (Statement $statement) use ($data): bool {
                     return $statement->card_id === $data->cardId
-                        && $statement->period === $data->period;
+                        && $statement->period->value() === $data->period;
                 });
             })
             ->pipe(fn (Collection $statements) => $this->createManyStatements->execute($statements));

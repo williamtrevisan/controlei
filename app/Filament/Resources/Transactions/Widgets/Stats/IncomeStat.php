@@ -3,8 +3,9 @@
 namespace App\Filament\Resources\Transactions\Widgets\Stats;
 
 use App\Actions\GetAllIncomeTransactionsByStatementPeriod;
-use App\Actions\GetProjectedMonthlyIncome;
+use App\Actions\GetAllUserMonthlyIncomeSources;
 use App\Filament\Resources\Transactions\Widgets\Concerns\AggregatesTransactions;
+use App\Models\IncomeSource;
 use App\ValueObjects\StatementPeriod;
 use Brick\Money\Money;
 use Filament\Support\Colors\Color;
@@ -16,11 +17,9 @@ class IncomeStat
 {
     use AggregatesTransactions;
 
-    private bool $isProjection = false;
-
     public function __construct(
         private GetAllIncomeTransactionsByStatementPeriod $getAllIncomeTransactionsByStatementPeriod,
-        private GetProjectedMonthlyIncome $getProjectedIncome
+        private GetAllUserMonthlyIncomeSources $getAllUserMonthlyIncomeSources
     ) {}
 
     public function make(StatementPeriod $statementPeriod): Stat
@@ -29,22 +28,26 @@ class IncomeStat
         $incomes = ($transactions = $this->getAllIncomeTransactionsByStatementPeriod
             ->execute($statementPeriod))
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
-        if ($incomes->isZero()) {
-            $this->isProjection = true;
-            $incomes = $this->getProjectedIncome->execute();
+
+        if (! $statementPeriod->isPast()) {
+            $incomes = $incomes->plus($this->calculateProjectedIncome($statementPeriod));
         }
 
         $previousIncomes = $this->getAllIncomeTransactionsByStatementPeriod
             ->execute($statementPeriod->previous())
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
 
-        $formattedAmount = session()->get('hide_sensitive_data', false) 
+        if ($statementPeriod->previous()->isPast()) {
+            $previousIncomes = $previousIncomes->plus($this->calculateProjectedIncome($statementPeriod->previous()));
+        }
+
+        $formattedAmount = session()->get('hide_sensitive_data', false)
             ? '****'
             : $incomes->formatTo('pt_BR');
 
         return Stat::make('Entradas', $formattedAmount)
             ->icon(Heroicon::OutlinedArrowTrendingUp)
-            ->color($this->isProjection ? Color::Blue : Color::Green)
+            ->color(Color::Green)
             ->description($this->description($incomes, $previousIncomes))
             ->chart($this->chart($transactions));
     }
@@ -52,10 +55,6 @@ class IncomeStat
 
     private function description(Money $incomes, Money $previousIncomes): string
     {
-        if ($this->isProjection) {
-            return 'Estimativa mensal';
-        }
-
         if ($previousIncomes->isZero()) {
             return 'Sem dados do período anterior';
         }
@@ -64,7 +63,7 @@ class IncomeStat
         $percentage = ($difference->getAmount()->toFloat() / $previousIncomes->getAmount()->toFloat()) * 100;
 
         $sign = $difference->isPositiveOrZero() ? '+' : '';
-        
+
         $formattedDifference = session()->get('hide_sensitive_data', false)
             ? '****'
             : $difference->formatTo('pt_BR');
@@ -74,13 +73,29 @@ class IncomeStat
 
     private function chart(Collection $transactions): Collection
     {
-        if ($this->isProjection) {
+        if ($transactions->isEmpty()) {
             return collect()
-                ->times(2, fn (): int => 1);
+                ->times(7, fn (): int => 0);
         }
 
         return $this->aggregateByDay($transactions)
             ->map(fn (Money $amount) => $amount->getMinorAmount()->toInt())
             ->sortKeys();
+    }
+
+    private function calculateProjectedIncome(StatementPeriod $statementPeriod): Money
+    {
+        $incomeSourceIdsWithTransactions = $this->getAllIncomeTransactionsByStatementPeriod
+            ->execute($statementPeriod)
+            ->whereNotNull('income_source_id')
+            ->pluck('income_source_id')
+            ->unique();
+
+        return $this->getAllUserMonthlyIncomeSources
+            ->execute()
+            ->reject(fn (IncomeSource $incomeSource) => $incomeSourceIdsWithTransactions->contains($incomeSource->id))
+            ->reduce(function (Money $carry, IncomeSource $incomeSource) {
+                return $carry->plus($incomeSource->average_amount);
+            }, money()->of(0));
     }
 }

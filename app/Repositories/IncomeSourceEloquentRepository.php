@@ -22,10 +22,22 @@ class IncomeSourceEloquentRepository implements IncomeSourceRepository
             ->where('user_id', auth()->id());
     }
 
-    public function getActiveForMatching(): Collection
+    public function actives(): Collection
     {
         return $this->builder()
             ->where('active', true)
-            ->get(['id', 'matcher_regex']);
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, IncomeSource>
+     */
+    public function monthly(): Collection
+    {
+        return $this->builder()
+            ->where('active', true)
+            ->where('frequency', 'monthly')
+            ->orderBy('name')
+            ->get();
     }
 }

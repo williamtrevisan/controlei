@@ -14,7 +14,6 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class InviteResource extends Resource
@@ -51,12 +50,5 @@ class InviteResource extends Resource
             'view' => ViewInvite::route('/{record}'),
             'edit' => EditInvite::route('/{record}/edit'),
         ];
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()
-            ->where('invitee_id', auth()->id())
-            ->with(['inviter', 'invitee']);
     }
 }

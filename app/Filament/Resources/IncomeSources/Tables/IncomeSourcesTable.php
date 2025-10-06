@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\IncomeSources\Tables;
 
+use App\Actions\ClassifyIncomeSources;
 use App\Actions\ClassifyTransactions;
 use App\Models\IncomeSource;
 use Filament\Actions\BulkAction;
@@ -35,10 +36,10 @@ class IncomeSourcesTable
                         if (!$incomeSource->average_amount) {
                             return 'Não definido';
                         }
-                        
+
                         $amount = $incomeSource->average_amount->formatTo('pt_BR');
-                        
-                        return session()->get('hide_sensitive_data', false) 
+
+                        return session()->get('hide_sensitive_data', false)
                             ? '****'
                             : $amount;
                     })
@@ -55,7 +56,7 @@ class IncomeSourcesTable
                     ->label('Reclassificar as transações')
                     ->icon(Heroicon::ArrowPath)
                     ->color('gray')
-                    ->action(fn () => app()->make(ClassifyTransactions::class)->execute()),
+                    ->action(fn () => app()->make(ClassifyIncomeSources::class)->execute()),
             ])
             ->emptyStateHeading('Nenhuma fonte de renda cadastrada.')
             ->emptyStateDescription('Crie uma conta primeiro e depois cadastre suas fontes de renda para acompanhar suas entradas mensais.')

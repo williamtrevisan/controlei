@@ -2,17 +2,21 @@
 
 namespace App\Actions;
 
+use App\Models\Invite;
 use App\Repositories\Contracts\InviteRepository;
 use Illuminate\Support\Collection;
 
-class GetAllPendingInvites
+class GetAllUserPendingInvites
 {
     public function __construct(
         private InviteRepository $inviteRepository
     ) {}
 
-    public function execute(int $userId): Collection
+    /**
+     * @return Collection<int, Invite>
+     */
+    public function execute(): Collection
     {
-        return $this->inviteRepository->findPendingByUser($userId);
+        return $this->inviteRepository->pending();
     }
 }

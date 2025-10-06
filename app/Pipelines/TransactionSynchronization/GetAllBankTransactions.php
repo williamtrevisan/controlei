@@ -15,6 +15,7 @@ use App\Pipelines\TransactionSynchronization\Actions\ExtractCardTransactions;
 use App\Pipelines\TransactionSynchronization\Actions\FindOrCreateAccount;
 use App\Pipelines\TransactionSynchronization\Actions\FindOrCreateManyCards;
 use App\Pipelines\TransactionSynchronization\Actions\FindOrCreateManyStatements;
+use App\Pipelines\TransactionSynchronization\Actions\UpdateAccountBalance;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
@@ -33,6 +34,7 @@ class GetAllBankTransactions
                     FindOrCreateManyStatements::class,
                     ExtractAccountTransactions::class,
                     AssignAccountTransactionStatement::class,
+                    UpdateAccountBalance::class,
                     ExtractCardTransactions::class,
                     AssignCardTransactionStatement::class,
                     CreateData::class,

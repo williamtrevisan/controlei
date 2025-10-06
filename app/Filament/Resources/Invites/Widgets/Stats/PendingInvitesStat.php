@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Invites\Widgets\Stats;
 
-use App\Actions\GetAllPendingInvites;
+use App\Actions\GetAllUserPendingInvites;
 use App\Filament\Resources\Invites\Widgets\Concerns\AggregatesInvites;
 use App\Models\Invite;
 use Filament\Support\Colors\Color;
@@ -15,14 +15,13 @@ class PendingInvitesStat
     use AggregatesInvites;
 
     public function __construct(
-        private GetAllPendingInvites $getAllPendingInvites
+        private GetAllUserPendingInvites $getAllUserPendingInvites
     ) {}
 
     public function make(): Stat
     {
         /** @var Collection<int, Invite> $invites */
-        $invites = $this->getAllPendingInvites
-            ->execute(auth()->id());
+        $invites = $this->getAllUserPendingInvites->execute();
 
         return Stat::make('Convites pendentes', $invites->count())
             ->icon(Heroicon::OutlinedClock)

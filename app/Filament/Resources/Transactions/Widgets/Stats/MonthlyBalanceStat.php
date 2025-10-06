@@ -5,8 +5,9 @@ namespace App\Filament\Resources\Transactions\Widgets\Stats;
 use App\Actions\GetAllUserExpenses;
 use App\Actions\GetAllExpenseTransactionsByStatementPeriod;
 use App\Actions\GetAllIncomeTransactionsByStatementPeriod;
-use App\Actions\GetProjectedMonthlyIncome;
+use App\Actions\GetAllUserMonthlyIncomeSources;
 use App\Filament\Resources\Transactions\Widgets\Concerns\AggregatesTransactions;
+use App\Models\IncomeSource;
 use App\ValueObjects\StatementPeriod;
 use Brick\Money\Money;
 use Filament\Support\Colors\Color;
@@ -14,7 +15,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Collection;
 
-class BalanceStat
+class MonthlyBalanceStat
 {
     use AggregatesTransactions;
 
@@ -22,7 +23,7 @@ class BalanceStat
 
     public function __construct(
         private GetAllIncomeTransactionsByStatementPeriod $getAllIncomeTransactionsByStatementPeriod,
-        private GetProjectedMonthlyIncome $getProjectedIncome,
+        private GetAllUserMonthlyIncomeSources $getAllUserMonthlyIncomeSources,
         private GetAllExpenseTransactionsByStatementPeriod $getAllExpenseTransactionsByStatementPeriod,
         private GetAllUserExpenses $getAllExpenses
     ) {}
@@ -35,8 +36,9 @@ class BalanceStat
         $incomes = ($incomeTransactions = $this->getAllIncomeTransactionsByStatementPeriod
             ->execute($statementPeriod))
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
-        if ($incomes->isZero()) {
-            $incomes = $this->getProjectedIncome->execute();
+
+        if (! $statementPeriod->isPast()) {
+            $incomes = $incomes->plus($this->calculateProjectedIncome($statementPeriod));
         }
 
         /** @var Money $expenses */
@@ -44,7 +46,7 @@ class BalanceStat
             ->execute($statementPeriod))
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
 
-        if ($statementPeriod->isFuture()) {
+        if (! $statementPeriod->isPast()) {
             $expenses = $expenses->plus($this->calculateProjectedExpenses($statementPeriod));
         }
 
@@ -85,19 +87,35 @@ class BalanceStat
             ->execute($this->statementPeriod->previous())
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
 
-        if ($previousIncomes->isZero()) {
-            $previousIncomes = $this->getProjectedIncome->execute();
+        if (! $this->statementPeriod->previous()->isPast()) {
+            $previousIncomes = $previousIncomes->plus($this->calculateProjectedIncome($this->statementPeriod->previous()));
         }
 
         $previousExpenses = $this->getAllExpenseTransactionsByStatementPeriod
             ->execute($this->statementPeriod->previous())
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
 
-        if ($this->statementPeriod->previous()->isFuture()) {
+        if (! $this->statementPeriod->previous()->isPast()) {
             $previousExpenses = $previousExpenses->plus($this->calculateProjectedExpenses($this->statementPeriod->previous()));
         }
 
         return $previousIncomes->minus($previousExpenses);
+    }
+
+    private function calculateProjectedIncome(StatementPeriod $statementPeriod): Money
+    {
+        $incomeSourceIdsWithTransactions = $this->getAllIncomeTransactionsByStatementPeriod
+            ->execute($statementPeriod)
+            ->whereNotNull('income_source_id')
+            ->pluck('income_source_id')
+            ->unique();
+
+        return $this->getAllUserMonthlyIncomeSources
+            ->execute()
+            ->reject(fn (IncomeSource $incomeSource) => $incomeSourceIdsWithTransactions->contains($incomeSource->id))
+            ->reduce(function (Money $carry, IncomeSource $incomeSource) {
+                return $carry->plus($incomeSource->average_amount);
+            }, money()->of(0));
     }
 
     private function calculateProjectedExpenses(StatementPeriod $statementPeriod): Money

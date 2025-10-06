@@ -35,8 +35,8 @@ class CreateInvite extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $user = User::query()
-            ->where('invite_code', strtoupper($data['invite_code']))
-            ->firstOrFail();
+            ->where('invite_code', $data['invite_code'])
+            ->first();
 
         return [
             'inviter_id' => auth()->id(),

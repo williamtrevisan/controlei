@@ -23,7 +23,7 @@ readonly class AssignAccountTransactionStatement
             ->mapWithKeys(function (Transaction $transaction) use ($statements, $data): array {
                 $statement = $statements
                     ->first(function (Statement $statement) use ($transaction): bool {
-                        return $statement->period === $statement->period($transaction->date())->value();
+                        return $statement->period->value() === $statement->period($transaction->date())->value();
                     });
 
                 return $statement

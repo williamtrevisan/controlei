@@ -7,7 +7,7 @@ use App\Models\Transaction;
 use App\Repositories\Contracts\TransactionRepository;
 use App\ValueObjects\StatementPeriod;
 use Closure;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
@@ -84,7 +84,7 @@ class TransactionEloquentRepository implements TransactionRepository
         return $this->findManyBy(function (Builder $query) use ($statementPeriod) {
             $query
                 ->where('direction', 'inflow')
-                ->whereHas('statement', fn ($q) => $q->where('period', $statementPeriod->value()));
+                ->whereHas('statement', fn (Builder $query) => $query->where('period', $statementPeriod->value()));
         });
     }
 
@@ -105,8 +105,47 @@ class TransactionEloquentRepository implements TransactionRepository
                         });
                 })
                 ->where('kind', 'purchase')
-                ->whereHas('statement', fn ($q) => $q->where('period', $statementPeriod->value()));
+                ->whereHas('statement', fn (Builder $query) => $query->where('period', $statementPeriod->value()));
         });
+    }
+
+    /**
+     * @return Collection<int, Transaction>
+     */
+    public function incomes(): Collection
+    {
+        return $this->findManyBy(function (Builder $query) {
+            $query->where('direction', 'inflow');
+        });
+    }
+
+    /**
+     * @return Collection<int, Transaction>
+     */
+    public function expenses(): Collection
+    {
+        return $this->findManyBy(function (Builder $query) {
+            $query
+                ->where(function (Builder $query) {
+                    $query->where('direction', 'outflow')
+                        ->orWhere(function (Builder $query) {
+                            $query
+                                ->where('direction', 'inflow')
+                                ->where('kind', 'refund');
+                        });
+                })
+                ->where('kind', 'purchase');
+        });
+    }
+
+    /**
+     * @param Transaction $transaction
+     * @param array<string, mixed> $attributes
+     * @return bool
+     */
+    public function update(Transaction $transaction, array $attributes): bool
+    {
+        return $transaction->update($attributes);
     }
 
     /**

@@ -2,13 +2,14 @@
 
 namespace App\Filament\Resources\Transactions\Pages;
 
-use App\Actions\ClassifyTransactions;
 use App\Events\SynchronizationCompleted;
 use App\Events\SynchronizationStarted;
 use App\Filament\Imports\TransactionImporter;
 use App\Filament\Resources\Transactions\TransactionResource;
 use App\Filament\Resources\Transactions\Widgets\MonthlyStatement;
+use App\Filament\Resources\Transactions\Widgets\Stats\AccountBalanceStat;
 use App\Jobs\FetchAndSynchronizeTransactions;
+use App\Jobs\ReclassifyAllTransactions;
 use App\Models\Synchronization;
 use App\ValueObjects\StatementPeriod;
 use Filament\Actions\Action;
@@ -132,7 +133,33 @@ class ListTransactions extends ListRecords
                     ->label('Reclassificar transações')
                     ->icon(Heroicon::OutlinedArrowPath)
                     ->color('gray')
-                    ->action(fn () => app()->make(ClassifyTransactions::class)->execute()),
+                    ->requiresConfirmation()
+                    ->modalHeading('Reclassificar todas as transações')
+                    ->modalDescription('Esta ação irá reclassificar todas as suas transações, atualizando: tipos de transação (taxas, cashback, pagamentos), despesas e fontes de renda. O processo será executado em segundo plano.')
+                    ->action(function (Action $action): void {
+                        Bus::batch([
+                            new ReclassifyAllTransactions(auth()->user()),
+                        ])
+                            ->name('reclassifying transactions')
+                            ->onQueue('default')
+                            ->onConnection('database')
+                            ->allowFailures()
+                            ->finally(function (): void {
+                                Notification::make()
+                                    ->title('Reclassificação concluída')
+                                    ->body('Todas as suas transações foram reclassificadas com sucesso.')
+                                    ->success()
+                                    ->sendToDatabase(auth()->user(), isEventDispatched: true);
+                            })
+                            ->dispatch();
+
+                        $action->successNotification(
+                            Notification::make()
+                                ->title('Reclassificação iniciada')
+                                ->body('A reclassificação foi iniciada e será processada em segundo plano.')
+                                ->success(),
+                        );
+                    }),
             ])
                 ->icon(Heroicon::OutlinedEllipsisHorizontal)
                 ->color('gray'),
@@ -142,6 +169,7 @@ class ListTransactions extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
+            AccountBalanceStat::class,
             MonthlyStatement::class,
         ];
     }

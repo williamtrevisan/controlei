@@ -5,14 +5,14 @@ namespace App\Actions;
 use App\Repositories\Contracts\InviteRepository;
 use Illuminate\Support\Collection;
 
-class GetAllAcceptedInvitesByPeriod
+class GetAllUserSentInvites
 {
     public function __construct(
         private InviteRepository $inviteRepository
     ) {}
 
-    public function execute(int $userId, int $days): Collection
+    public function execute(): Collection
     {
-        return $this->inviteRepository->findAcceptedByUserAndPeriod($userId, $days);
+        return $this->inviteRepository->sent();
     }
 }

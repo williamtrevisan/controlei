@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Invites\Widgets\Stats;
 
-use App\Actions\GetAllSentInvitesByPeriod;
-use App\Actions\GetAllAcceptedInvitesByPeriod;
+use App\Actions\GetAllUserAcceptedInvitesByPeriod;
+use App\Actions\GetAllUserSentInvitesByPeriod;
 use App\Filament\Resources\Invites\Widgets\Concerns\AggregatesInvites;
 use App\Models\Invite;
 use Filament\Support\Colors\Color;
@@ -16,19 +16,19 @@ class AcceptanceRateStat
     use AggregatesInvites;
 
     public function __construct(
-        private GetAllSentInvitesByPeriod $getAllSentInvitesByPeriod,
-        private GetAllAcceptedInvitesByPeriod $getAllAcceptedInvitesByPeriod
+        private GetAllUserSentInvitesByPeriod $getAllUserSentInvitesByPeriod,
+        private GetAllUserAcceptedInvitesByPeriod $getAllUserAcceptedInvitesByPeriod
     ) {}
 
     public function make(): Stat
     {
         /** @var Collection<int, Invite> $sentInvites */
-        $sentInvites = $this->getAllSentInvitesByPeriod
-            ->execute(auth()->id(), 30);
+        $sentInvites = $this->getAllUserSentInvitesByPeriod
+            ->execute(now()->subMonth());
 
         /** @var Collection<int, Invite> $acceptedInvites */
-        $acceptedInvites = $this->getAllAcceptedInvitesByPeriod
-            ->execute(auth()->id(), 30);
+        $acceptedInvites = $this->getAllUserAcceptedInvitesByPeriod
+            ->execute(now()->subMonth());
 
         $rate = $this->rate($sentInvites, $acceptedInvites);
 

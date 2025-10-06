@@ -2,32 +2,39 @@
 
 namespace App\Repositories\Contracts;
 
-use App\Enums\InvitationStatus;
 use App\Models\Invite;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 interface InviteRepository
 {
     /**
-     * @param string $userId
-     * @param int $days
      * @return Collection<int, Invite>
      */
-    public function findSentByUserAndPeriod(string $userId, int $days): Collection;
+    public function received(): Collection;
 
     /**
-     * @param string $userId
      * @return Collection<int, Invite>
      */
-    public function findPendingByUser(string $userId): Collection;
+    public function sent(): Collection;
 
     /**
-     * @param string $userId
-     * @param int $days
+     * @param Carbon $date
      * @return Collection<int, Invite>
      */
-    public function findAcceptedByUserAndPeriod(string $userId, int $days): Collection;
+    public function sentByPeriod(Carbon $date): Collection;
+
+    /**
+     * @return Collection<int, Invite>
+     */
+    public function pending(): Collection;
+
+    /**
+     * @param Carbon $date
+     * @return Collection<int, Invite>
+     */
+    public function acceptedByPeriod(Carbon $date): Collection;
 
     /**
      * @param string $userId

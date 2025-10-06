@@ -12,7 +12,7 @@ interface TransactionMemberRepository
      * @param int $memberId
      * @return Collection<int, TransactionMember>
      */
-    public function findAlreadyShared(Collection $transactionIds, int $memberId): Collection;
+    public function findAlreadyShared(Collection $transactionIds, string $memberId): Collection;
 
     /**
      * @param Collection $memberships

@@ -30,6 +30,8 @@ class FetchAndSynchronizeTransactions implements ShouldQueue
 
     public ?int $maxExceptions = 1;
 
+    public int $timeout = 1000000;
+
     public function __construct(
         private readonly Synchronization $synchronization,
         private readonly string $token,

@@ -23,6 +23,11 @@ class AsStatementPeriod implements CastsAttributes
             return null;
         }
 
+        // Handle both string and StatementPeriod object
+        if (is_string($value)) {
+            return $value;
+        }
+
         return $value->value();
     }
 }

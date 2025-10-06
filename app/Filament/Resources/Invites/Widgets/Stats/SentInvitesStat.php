@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Invites\Widgets\Stats;
 
-use App\Actions\GetAllSentInvitesByPeriod;
+use App\Actions\GetAllUserSentInvitesByPeriod;
 use App\Filament\Resources\Invites\Widgets\Concerns\AggregatesInvites;
 use App\Models\Invite;
 use Filament\Support\Colors\Color;
@@ -15,17 +15,17 @@ class SentInvitesStat
     use AggregatesInvites;
 
     public function __construct(
-        private GetAllSentInvitesByPeriod $getAllSentInvitesByPeriod
+        private GetAllUserSentInvitesByPeriod $getAllSentInvitesByPeriod
     ) {}
 
     public function make(): Stat
     {
         /** @var Collection<int, Invite> $invites */
         $invites = $this->getAllSentInvitesByPeriod
-            ->execute(auth()->id(), 30);
+            ->execute(now()->subMonth());
 
         $previousInvites = $this->getAllSentInvitesByPeriod
-            ->execute(auth()->id(), 60)
+            ->execute(now()->subMonths(2))
             ->filter(fn ($invite) => $invite->created_at->lt(now()->subDays(30)));
 
         return Stat::make('Convites enviados', $invites->count())
@@ -55,11 +55,6 @@ class SentInvitesStat
 
     private function chart(Collection $invites): Collection
     {
-        if ($invites->isEmpty()) {
-            return collect()
-                ->times(7, fn (): int => 0);
-        }
-
         return $this->aggregateByDay($invites)
             ->sortKeys();
     }

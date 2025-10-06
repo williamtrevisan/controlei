@@ -6,6 +6,7 @@ use App\Enums\TransactionDirection;
 use App\Enums\TransactionKind;
 use App\Enums\TransactionPaymentMethod;
 use App\Enums\TransactionStatus;
+use App\Models\Statement;
 use App\Models\Transaction;
 use App\ValueObjects\StatementPeriod;
 use Banklink\Entities;
@@ -78,14 +79,14 @@ readonly class TransactionData implements Arrayable
     public static function fromEntity(
         Transaction $transaction,
         int $installment,
-        StatementPeriod $statementPeriod
+        Statement $statement
     ): self {
         return new self(
             accountId: $transaction->account?->id,
             cardId: $transaction->card?->id,
             incomeSourceId: null,
             expenseId: null,
-            statementId: $statementPeriod->value(),
+            statementId: $statement->id,
             parentTransactionId: $transaction->id,
             date: $transaction->date,
             description: $transaction->description,
@@ -95,7 +96,7 @@ readonly class TransactionData implements Arrayable
             paymentMethod: $transaction->payment_method,
             currentInstallment: $installment,
             totalInstallments: $transaction->total_installments,
-            status: $statementPeriod->isFuture() ? TransactionStatus::Scheduled : TransactionStatus::Paid,
+            status: $statement->period->isPast() ? TransactionStatus::Paid : TransactionStatus::Scheduled,
             matcherRegex: null,
         );
     }
