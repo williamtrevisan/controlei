@@ -32,14 +32,11 @@ class InviteResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function form(Schema $schema): Schema
     {
         return InviteForm::configure($schema);
-    }
-
-    public static function table(Table $table): Table
-    {
-        return InvitesTable::configure($table);
     }
 
     public static function getPages(): array
@@ -47,8 +44,6 @@ class InviteResource extends Resource
         return [
             'index' => ListInvites::route('/'),
             'create' => CreateInvite::route('/create'),
-            'view' => ViewInvite::route('/{record}'),
-            'edit' => EditInvite::route('/{record}/edit'),
         ];
     }
 }
