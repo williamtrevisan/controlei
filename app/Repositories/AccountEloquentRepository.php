@@ -39,4 +39,11 @@ class AccountEloquentRepository implements AccountRepository
                 'account_digit' => $accountDigit,
             ], ['type' => $type]);
     }
+
+    public function first(): ?Account
+    {
+        return $this->builder()
+            ->where('user_id', auth()->id())
+            ->first();
+    }
 }

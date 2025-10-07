@@ -41,4 +41,8 @@ interface InviteRepository
      * @return Collection<int, User>
      */
     public function findConnectedUsers(string $userId): Collection;
+
+    public function exists(User $invitee): bool;
+
+    public function update(Invite $invite, array $data): Invite;
 }

@@ -15,4 +15,6 @@ interface AccountRepository
         string $account,
         string $accountDigit
     ): Account;
+
+    public function first(): ?Account;
 }

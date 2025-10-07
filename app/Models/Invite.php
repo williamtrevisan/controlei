@@ -3,11 +3,22 @@
 namespace App\Models;
 
 use App\Enums\InvitationStatus;
+use App\Observers\InviteObserver;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property string $inviter_id
+ * @property string $invitee_id
+ * @property InvitationStatus $status
+ * @property string $message
+ * @property ?Carbon $accepted_at
+ */
+#[ObservedBy(InviteObserver::class)]
 class Invite extends Model
 {
     use HasFactory;

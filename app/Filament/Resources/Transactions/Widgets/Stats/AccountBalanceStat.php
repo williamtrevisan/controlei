@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Transactions\Widgets\Stats;
 
-use App\Models\Account;
+use App\Actions\GetUserAccount;
 use Brick\Money\Money;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
@@ -17,7 +17,7 @@ class AccountBalanceStat extends StatsOverviewWidget
 
     protected function getStats(): array
     {
-        $balance = Account::query()->first()->balance;
+        $balance = app()->make(GetUserAccount::class)->execute()?->balance ?? money()->of(0);
 
         $formattedBalance = session()->get('hide_sensitive_data', false)
             ? '****'

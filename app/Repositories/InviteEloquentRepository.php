@@ -108,4 +108,18 @@ class InviteEloquentRepository implements InviteRepository
             ->merge($usersWhoseInvitesIAccepted)
             ->unique('id');
     }
+
+    public function exists(User $invitee): bool
+    {
+        return $this->builder()
+            ->where('inviter_id', auth()->id())
+            ->where('invitee_id', $invitee->id)
+            ->exists();
+    }
+
+    public function update(Invite $invite, array $data): Invite
+    {
+        return tap($invite)
+            ->update($data);
+    }
 }

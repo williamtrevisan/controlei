@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\Invites\InviteResource;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
@@ -13,7 +14,9 @@ use Filament\Navigation\MenuItem;
 use Filament\Notifications\Notification;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Schemas\Components\Section;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -47,6 +50,30 @@ class DashboardPanelProvider extends PanelProvider
             ])
             ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()
+            ->userMenuItems([
+                Action::make('invite_code')
+                    ->label(fn () => auth()->user()->invite_code)
+                    ->icon(Heroicon::OutlinedClipboardDocument)
+                    ->color('primary')
+                    ->badge('Clique para copiar')
+                    ->badgeColor('gray')
+                    ->extraAttributes(fn () => [
+                        'data-copyable' => auth()->user()->invite_code,
+                    ], true)
+                    ->alpineClickHandler(<<<'JS'
+                        navigator.clipboard
+                            .writeText(event.currentTarget.dataset.copyable)
+                            .then(() => {
+                                $tooltip('Código copiado!', { timeout: 3000 });
+                            });
+                    JS),
+
+                Action::make('send_invite')
+                    ->label('Conecte-se com outros usuários')
+                    ->icon(Heroicon::OutlinedUserGroup)
+                    ->color('success')
+                    ->url(fn () => InviteResource::getUrl('create')),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
