@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CardResource extends Resource
 {
@@ -38,6 +39,14 @@ class CardResource extends Resource
     public static function table(Table $table): Table
     {
         return CardsTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->whereHas('account', function (Builder $query) {
+                $query->where('user_id', auth()->id());
+            });
     }
 
     public static function getRelations(): array

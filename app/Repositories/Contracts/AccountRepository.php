@@ -9,10 +9,12 @@ use App\Models\Account;
 interface AccountRepository
 {
     public function findOrCreateByBank(
-        AccountType $type, 
-        AccountBank $bank, 
-        string $agency, 
-        string $account, 
+        AccountType $type,
+        AccountBank $bank,
+        string $agency,
+        string $account,
         string $accountDigit
     ): Account;
+
+    public function first(): ?Account;
 }

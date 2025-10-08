@@ -2,9 +2,10 @@
 
 namespace App\Actions;
 
+use App\Models\Transaction;
 use App\Repositories\Contracts\TransactionRepository;
 use App\ValueObjects\StatementPeriod;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 
 class GetAllExpenseTransactionsByStatementPeriod
 {
@@ -12,6 +13,10 @@ class GetAllExpenseTransactionsByStatementPeriod
         private TransactionRepository $transactionRepository
     ) {}
 
+    /**
+     * @param StatementPeriod $statementPeriod
+     * @return Collection<int, Transaction>
+     */
     public function execute(StatementPeriod $statementPeriod): Collection
     {
         return $this->transactionRepository->findExpensesByStatementPeriod($statementPeriod);

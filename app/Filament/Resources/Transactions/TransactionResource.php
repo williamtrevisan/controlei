@@ -13,6 +13,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+                                         use Illuminate\Database\Eloquent\Builder;
 
 class TransactionResource extends Resource
 {
@@ -38,6 +39,19 @@ class TransactionResource extends Resource
     public static function table(Table $table): Table
     {
         return TransactionsTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where(function (Builder $query) {
+                $query->whereHas('account', function (Builder $subQuery) {
+                    $subQuery->where('user_id', auth()->id());
+                })
+                ->orWhereHas('members', function (Builder $subQuery) {
+                    $subQuery->where('member_id', auth()->id());
+                });
+            });
     }
 
     public static function getPages(): array

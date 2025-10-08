@@ -5,8 +5,10 @@ namespace App\Models;
 use App\Casts\AsMoney;
 use App\Enums\ExpenseFrequency;
 use Brick\Money\Money;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -21,8 +23,10 @@ class Expense extends Model
 {
     /** @use HasFactory<\Database\Factories\ExpenseFactory> */
     use HasFactory;
+    use HasUuids;
 
     protected $fillable = [
+        'user_id',
         'description',
         'frequency',
         'matcher_regex',
@@ -36,6 +40,11 @@ class Expense extends Model
             'frequency' => ExpenseFrequency::class,
             'average_amount' => AsMoney::class,
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function transactions(): HasMany

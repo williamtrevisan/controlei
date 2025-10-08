@@ -2,13 +2,14 @@
 
 namespace App\Filament\Resources\Transactions\Pages;
 
-use App\Actions\ClassifyTransactions;
 use App\Events\SynchronizationCompleted;
 use App\Events\SynchronizationStarted;
 use App\Filament\Imports\TransactionImporter;
 use App\Filament\Resources\Transactions\TransactionResource;
 use App\Filament\Resources\Transactions\Widgets\MonthlyStatement;
+use App\Filament\Resources\Transactions\Widgets\Stats\AccountBalanceStat;
 use App\Jobs\FetchAndSynchronizeTransactions;
+use App\Jobs\ReclassifyAllTransactions;
 use App\Models\Synchronization;
 use App\ValueObjects\StatementPeriod;
 use Filament\Actions\Action;
@@ -22,6 +23,7 @@ use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Bus;
 
 class ListTransactions extends ListRecords
@@ -50,7 +52,7 @@ class ListTransactions extends ListRecords
             Action::make('toggle_sensitive_data')
                 ->label('')
                 ->tooltip(fn() => session()->get('hide_sensitive_data', false) ? 'Mostrar valores' : 'Ocultar valores')
-                ->icon(fn() => session()->get('hide_sensitive_data', false) ? Heroicon::OutlinedEye : Heroicon::OutlinedEyeSlash)
+                ->icon(fn() => session()->get('hide_sensitive_data', false) ? Heroicon::OutlinedEyeSlash : Heroicon::OutlinedEye)
                 ->color('gray')
                 ->action(function () {
                     $isHidden = ! session()->get('hide_sensitive_data', false);
@@ -115,8 +117,8 @@ class ListTransactions extends ListRecords
                         ->placeholder('******'),
                 ]),
 
-            CreateAction::make('shared_expense')
-                ->label('Gasto compartilhado')
+            CreateAction::make()
+                ->label('Novo registro')
                 ->icon(Heroicon::OutlinedPlus)
                 ->color('gray'),
 
@@ -132,7 +134,33 @@ class ListTransactions extends ListRecords
                     ->label('Reclassificar transações')
                     ->icon(Heroicon::OutlinedArrowPath)
                     ->color('gray')
-                    ->action(fn () => app()->make(ClassifyTransactions::class)->execute()),
+                    ->requiresConfirmation()
+                    ->modalHeading('Reclassificar todas as transações')
+                    ->modalDescription('Esta ação irá reclassificar todas as suas transações, atualizando: tipos de transação (taxas, cashback, pagamentos), despesas e fontes de renda. O processo será executado em segundo plano.')
+                    ->action(function (Action $action): void {
+                        Bus::batch([
+                            new ReclassifyAllTransactions(auth()->user()),
+                        ])
+                            ->name('reclassifying transactions')
+                            ->onQueue('default')
+                            ->onConnection('database')
+                            ->allowFailures()
+                            ->finally(function (): void {
+                                Notification::make()
+                                    ->title('Reclassificação concluída')
+                                    ->body('Todas as suas transações foram reclassificadas com sucesso.')
+                                    ->success()
+                                    ->sendToDatabase(auth()->user(), isEventDispatched: true);
+                            })
+                            ->dispatch();
+
+                        $action->successNotification(
+                            Notification::make()
+                                ->title('Reclassificação iniciada')
+                                ->body('A reclassificação foi iniciada e será processada em segundo plano.')
+                                ->success(),
+                        );
+                    }),
             ])
                 ->icon(Heroicon::OutlinedEllipsisHorizontal)
                 ->color('gray'),
@@ -142,6 +170,7 @@ class ListTransactions extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
+            AccountBalanceStat::class,
             MonthlyStatement::class,
         ];
     }
@@ -152,23 +181,28 @@ class ListTransactions extends ListRecords
 
         return [
             $current->previous()->value() => Tab::make((string) $current->previous())
-                ->query(fn ($query) => $query->where('statement_period', $current->previous()->value()))
+                ->query(function (Builder $query) use ($current): void {
+                    $query
+                        ->whereHas('statement', function (Builder $query) use ($current): void {
+                            $query->where('period', $current->previous()->value());
+                        });
+                })
                 ->icon(Heroicon::OutlinedLockClosed),
 
             $current->value() => Tab::make((string) $current)
-                ->query(fn ($query) => $query->where('statement_period', $current->value()))
+                ->query(fn (Builder $query) => $query->whereHas('statement', fn ($q) => $q->where('period', $current->value())))
                 ->icon(Heroicon::OutlinedLockOpen),
 
             $current->next()->value() => Tab::make((string) $current->next())
-                ->query(fn ($query) => $query->where('statement_period', $current->next()->value()))
+                ->query(fn (Builder $query) => $query->whereHas('statement', fn ($q) => $q->where('period', $current->next()->value())))
                 ->icon(Heroicon::OutlinedClock),
 
             $current->advance(2)->value() => Tab::make((string) $current->advance(2))
-                ->query(fn ($query) => $query->where('statement_period', $current->advance(2)->value()))
+                ->query(fn (Builder $query) => $query->whereHas('statement', fn ($q) => $q->where('period', $current->advance(2)->value())))
                 ->icon(Heroicon::OutlinedClock),
 
             $current->advance(3)->value() => Tab::make((string) $current->advance(3))
-                ->query(fn ($query) => $query->where('statement_period', $current->advance(3)->value()))
+                ->query(fn (Builder $query) => $query->whereHas('statement', fn ($q) => $q->where('period', $current->advance(3)->value())))
                 ->icon(Heroicon::OutlinedClock),
         ];
     }

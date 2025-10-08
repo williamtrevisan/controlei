@@ -48,9 +48,9 @@ return [
             */
 
             'classifiers' => [
-                \App\Actions\Classifiers\CashbackTransactionClassifier::class,
-                \App\Actions\Classifiers\FeeTransactionClassifier::class,
-                \App\Actions\Classifiers\InvoicePaymentTransactionClassifier::class
+                \App\Classifiers\CashbackTransactionClassifier::class,
+                \App\Classifiers\FeeTransactionClassifier::class,
+                \App\Classifiers\InvoicePaymentTransactionClassifier::class
             ],
 
             /*

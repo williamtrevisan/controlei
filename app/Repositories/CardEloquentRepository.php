@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\DataTransferObjects\CardData;
 use App\Models\Card;
 use App\Repositories\Contracts\CardRepository;
+use Closure;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -19,7 +20,10 @@ class CardEloquentRepository implements CardRepository
     protected function builder(): Builder
     {
         return $this->model
-            ->newQuery();
+            ->newQuery()
+            ->whereHas('account', function (Builder $query) {
+                $query->where('user_id', auth()->id());
+            });
     }
 
     public function findOrCreate(CardData $card): Card
@@ -38,6 +42,32 @@ class CardEloquentRepository implements CardRepository
     }
 
     /**
+     * @param Collection<int, CardData> $values
+     * @return bool
+     */
+    public function createMany(Collection $values): bool
+    {
+        return $this->builder()
+            ->insert($values->toArray());
+    }
+
+    /**
+     * @param string|Closure $column
+     * @param mixed $value
+     * @return Collection<int, Card>
+     */
+    public function findManyBy(string|\Closure $column, mixed $value = null): Collection
+    {
+        return $this->builder()
+            ->when(
+                $column instanceof Closure,
+                fn (Builder $query) => $column($query),
+                fn (Builder $query) => $query->where($column, $value)
+            )
+            ->get();
+    }
+
+    /**
      * @return Collection<int, Card>
      */
     public function getAllMatcherRegex(): Collection
@@ -50,10 +80,13 @@ class CardEloquentRepository implements CardRepository
     /**
      * @return Collection<int, Card>
      */
-    public function findSharedCards(): Collection
+    public function getAllUserCards(): Collection
     {
         return $this->builder()
-            ->whereNotNull('owner')
+            ->whereHas('account', function ($query) {
+                $query->where('user_id', auth()->id());
+            })
+            ->with('account')
             ->get();
     }
 }

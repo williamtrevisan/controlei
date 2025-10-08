@@ -2,15 +2,16 @@
 
 namespace App\Filament\Resources\Transactions\Pages;
 
+use App\Actions\FindOrCreateManyStatements;
 use App\Enums\TransactionDirection;
 use App\Enums\TransactionKind;
 use App\Enums\TransactionPaymentMethod;
 use App\Filament\Resources\Transactions\TransactionResource;
 use App\Models\Card;
-use App\ValueObjects\StatementPeriod;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class CreateTransaction extends CreateRecord
 {
@@ -18,17 +19,17 @@ class CreateTransaction extends CreateRecord
 
     public function getBreadcrumb(): string
     {
-        return 'Novo gasto compartilhado';
+        return 'Nova transação';
     }
 
     public function getTitle(): string|Htmlable
     {
-        return 'Crie seu gasto compartilhado';
+        return 'Criar nova transação';
     }
 
     public function getSubheading(): string|Htmlable|null
     {
-        return 'Registre uma compra feita no cartão de outra pessoa que você vai reembolsar.';
+        return 'Registre uma compra feita com seu cartão de crédito.';
     }
 
     protected function getCreatedNotificationTitle(): ?string
@@ -38,12 +39,16 @@ class CreateTransaction extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
+        $card = Card::query()->find($data['card_id']);
+        $statement = app()->make(FindOrCreateManyStatements::class)
+            ->execute($card, Carbon::parse($data['date']), $data['total_installments'] ?? 1);
+
         return parent::handleRecordCreation(array_merge($data, [
-            'account_id' => Card::query()->find($data['card_id'])->account->id,
+            'account_id' => $card->account->id,
+            'statement_id' => $statement->id,
             'direction' => TransactionDirection::Outflow,
             'kind' => TransactionKind::Purchase,
             'payment_method' => TransactionPaymentMethod::Credit,
-            'statement_period' => (new StatementPeriod())->current()->rewind($data['current_installment'] - 1),
         ]));
     }
 }

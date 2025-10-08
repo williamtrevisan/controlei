@@ -2,7 +2,10 @@
 
 namespace App\Filament\Resources\Expenses\Tables;
 
+use App\Actions\ClassifyExpenses;
 use App\Models\Expense;
+use Filament\Actions\BulkAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -26,9 +29,9 @@ class ExpensesTable
                     ->label('Média')
                     ->getStateUsing(function (Expense $expense) {
                         $amount = $expense->average_amount->formatTo('pt_BR');
-                        
-                        return session()->get('hide_sensitive_data', false) 
-                            ? str($amount)->replaceMatches('/\d/', '*')
+
+                        return session()->get('hide_sensitive_data', false)
+                            ? '****'
                             : $amount;
                     })
                     ->alignEnd()
@@ -42,8 +45,8 @@ class ExpensesTable
                             return null;
                         }
 
-                        return session()->get('hide_sensitive_data', false) 
-                            ? str($amount)->replaceMatches('/\d/', '*')
+                        return session()->get('hide_sensitive_data', false)
+                            ? '****'
                             : $amount;
                     })
                     ->alignEnd()
@@ -52,6 +55,17 @@ class ExpensesTable
                 IconColumn::make('active')
                     ->label('Status')
                     ->boolean(),
-            ]);
+            ])
+            ->striped()
+            ->toolbarActions([
+                BulkAction::make('reclassify')
+                    ->label('Reclassificar as transações')
+                    ->icon(Heroicon::ArrowPath)
+                    ->color('gray')
+                    ->action(fn () => app()->make(ClassifyExpenses::class)->execute()),
+            ])
+            ->emptyStateHeading('Nenhuma despesa cadastrada.')
+            ->emptyStateDescription('Crie uma conta primeiro e depois cadastre suas despesas para acompanhar seus gastos mensais.')
+            ->emptyStateIcon(Heroicon::OutlinedArrowTrendingDown);
     }
 }

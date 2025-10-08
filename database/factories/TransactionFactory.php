@@ -2,6 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Enums\TransactionDirection;
+use App\Enums\TransactionKind;
+use App\Enums\TransactionPaymentMethod;
+use App\Enums\TransactionStatus;
+use App\Models\Account;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +22,23 @@ class TransactionFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'account_id' => Account::factory(),
+            'card_id' => null,
+            'income_source_id' => null,
+            'expense_id' => null,
+            'statement_id' => null,
+            'parent_transaction_id' => null,
+            'date' => fake()->dateTimeBetween('-1 year', 'now'),
+            'description' => fake()->words(3, true),
+            'amount' => fake()->numberBetween(1000, 100000),
+            'direction' => fake()->randomElement(TransactionDirection::cases()),
+            'kind' => fake()->randomElement(TransactionKind::cases()),
+            'payment_method' => fake()->randomElement(TransactionPaymentMethod::cases()),
+            'current_installment' => null,
+            'total_installments' => null,
+            'status' => TransactionStatus::Pending,
+            'matcher_regex' => null,
+            'hash' => fake()->sha256(),
         ];
     }
 }

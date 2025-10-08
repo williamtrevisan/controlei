@@ -10,6 +10,11 @@ class StatementPeriod
     {
     }
 
+    public static function fromDate(Carbon $date): StatementPeriod
+    {
+        return new StatementPeriod($date->format('Y-m'));
+    }
+
     public function current(): self
     {
         $year = now()->year;
@@ -78,9 +83,9 @@ class StatementPeriod
         return new self(sprintf('%04d-%02d', $year, $month));
     }
 
-    public function isFuture(): bool
+    public function isPast(): bool
     {
-        return $this > $this->current();
+        return $this < $this->current();
     }
 
     public function value(): string

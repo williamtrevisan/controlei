@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Actions\GetAllBankTransactions;
 use App\Models\Synchronization;
+use App\Pipelines\TransactionSynchronization\GetAllBankTransactions;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -29,6 +29,8 @@ class FetchAndSynchronizeTransactions implements ShouldQueue
     public int $tries = 1;
 
     public ?int $maxExceptions = 1;
+
+    public int $timeout = 1000000;
 
     public function __construct(
         private readonly Synchronization $synchronization,

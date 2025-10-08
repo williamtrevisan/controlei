@@ -42,7 +42,7 @@ class CardsTable
                         $amount = $card->limit->formatTo('pt_BR');
 
                         return session()->get('hide_sensitive_data', false) 
-                            ? str($amount)->replaceMatches('/\d/', '*')
+                            ? '****'
                             : $amount;
                     })
                     ->money('BRL')
@@ -67,8 +67,8 @@ class CardsTable
                     ->color('gray')
                     ->action(fn () => app()->make(ClassifyTransactions::class)->execute()),
             ])
-            ->emptyStateHeading('Nenhuma conta disponível.')
-            ->emptyStateDescription('Realize a criação de suas contas para começar.')
+            ->emptyStateHeading('Nenhum cartão disponível.')
+            ->emptyStateDescription('Crie uma conta primeiro e depois adicione seus cartões para começar a gerenciar suas transações.')
             ->emptyStateIcon(Heroicon::OutlinedCreditCard);
     }
 }

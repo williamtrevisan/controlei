@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\Transactions\Widgets\Stats;
 
-use App\Actions\GetAllExpenses;
+use App\Actions\GetAllUserExpenses;
 use App\Actions\GetAllExpenseTransactionsByStatementPeriod;
 use App\Filament\Resources\Transactions\Widgets\Concerns\AggregatesTransactions;
+use App\Models\Expense;
 use App\ValueObjects\StatementPeriod;
 use Brick\Money\Money;
 use Filament\Support\Colors\Color;
@@ -18,7 +19,7 @@ class ExpenseStat
 
     public function __construct(
         private GetAllExpenseTransactionsByStatementPeriod $getAllExpenseTransactionsByStatementPeriod,
-        private GetAllExpenses $getAllExpenses
+        private GetAllUserExpenses $getAllUserExpenses
     ) {}
 
     public function make(StatementPeriod $statementPeriod): Stat
@@ -28,7 +29,7 @@ class ExpenseStat
             ->execute($statementPeriod))
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
 
-        if ($statementPeriod->isFuture()) {
+        if (! $statementPeriod->isPast()) {
             $expenses = $expenses->plus($this->calculateProjectedExpenses($statementPeriod));
         }
 
@@ -36,12 +37,12 @@ class ExpenseStat
             ->execute($statementPeriod->previous())
             ->reduce(fn ($carry, $transaction) => $carry->plus($transaction->amount), money()->of(0));
 
-        if ($statementPeriod->previous()->isFuture()) {
+        if ($statementPeriod->previous()->isPast()) {
             $previousExpenses = $previousExpenses->plus($this->calculateProjectedExpenses($statementPeriod->previous()));
         }
 
-        $formattedAmount = session()->get('hide_sensitive_data', false) 
-            ? str($expenses->formatTo('pt_BR'))->replaceMatches('/\d/', '*')
+        $formattedAmount = session()->get('hide_sensitive_data', false)
+            ? '****'
             : $expenses->formatTo('pt_BR');
 
         return Stat::make('Saídas', $formattedAmount)
@@ -61,9 +62,9 @@ class ExpenseStat
         $percentage = ($difference->getAmount()->toFloat() / $previousExpenses->getAmount()->toFloat()) * 100;
 
         $sign = $difference->isPositiveOrZero() ? '+' : '';
-        
+
         $formattedDifference = session()->get('hide_sensitive_data', false)
-            ? str($difference->formatTo('pt_BR'))->replaceMatches('/\d/', '*')
+            ? '****'
             : $difference->formatTo('pt_BR');
 
         return sprintf('%+.1f%% (%s%s vs período anterior)', $percentage, $sign, $formattedDifference);
@@ -71,6 +72,11 @@ class ExpenseStat
 
     private function chart(Collection $transactions): Collection
     {
+        if ($transactions->isEmpty()) {
+            return collect()
+                ->times(7, fn (): int => 0);
+        }
+
         return $this->aggregateByDay($transactions)
             ->map(fn (Money $amount) => $amount->getMinorAmount()->toInt())
             ->sortKeys();
@@ -84,10 +90,10 @@ class ExpenseStat
             ->pluck('expense_id')
             ->unique();
 
-        return $this->getAllExpenses
+        return $this->getAllUserExpenses
             ->execute()
-            ->reject(fn ($expense) => $expenseIdsWithTransactions->contains($expense->id))
-            ->reduce(function (Money $carry, $expense) {
+            ->reject(fn (Expense $expense) => $expenseIdsWithTransactions->contains($expense->id))
+            ->reduce(function (Money $carry, Expense $expense) {
                 $monthlyProjection = $expense->getMonthlyProjection();
 
                 return $monthlyProjection

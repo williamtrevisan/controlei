@@ -6,8 +6,11 @@ use App\Casts\AsMoney;
 use App\Enums\IncomeFrequency;
 use App\Enums\IncomeSourceType;
 use Brick\Money\Money;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -23,8 +26,10 @@ class IncomeSource extends Model
 {
     /** @use HasFactory<\Database\Factories\IncomeSourceFactory> */
     use HasFactory;
+    use HasUuids;
 
     protected $fillable = [
+        'user_id',
         'name',
         'slug',
         'type',
@@ -41,5 +46,15 @@ class IncomeSource extends Model
             'frequency' => IncomeFrequency::class,
             'average_amount' => AsMoney::class,
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'income_source_id');
     }
 }

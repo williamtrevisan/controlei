@@ -7,7 +7,7 @@ use App\Models\Transaction;
 use App\Repositories\Contracts\TransactionRepository;
 use App\ValueObjects\StatementPeriod;
 use Closure;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
@@ -22,7 +22,15 @@ class TransactionEloquentRepository implements TransactionRepository
     protected function builder(): Builder
     {
         return $this->model
-            ->newQuery();
+            ->newQuery()
+            ->where(function (Builder $query) {
+                $query->whereHas('account', function (Builder $subQuery) {
+                    $subQuery->where('user_id', auth()->id());
+                })
+                ->orWhereHas('members', function (Builder $subQuery) {
+                    $subQuery->where('member_id', auth()->id());
+                });
+            });
     }
 
     /**
@@ -76,7 +84,7 @@ class TransactionEloquentRepository implements TransactionRepository
         return $this->findManyBy(function (Builder $query) use ($statementPeriod) {
             $query
                 ->where('direction', 'inflow')
-                ->where('statement_period', $statementPeriod->value());
+                ->whereHas('statement', fn (Builder $query) => $query->where('period', $statementPeriod->value()));
         });
     }
 
@@ -97,7 +105,63 @@ class TransactionEloquentRepository implements TransactionRepository
                         });
                 })
                 ->where('kind', 'purchase')
-                ->where('statement_period', $statementPeriod->value());
+                ->whereHas('statement', fn (Builder $query) => $query->where('period', $statementPeriod->value()));
         });
+    }
+
+    /**
+     * @return Collection<int, Transaction>
+     */
+    public function incomes(): Collection
+    {
+        return $this->findManyBy(function (Builder $query) {
+            $query->where('direction', 'inflow');
+        });
+    }
+
+    /**
+     * @return Collection<int, Transaction>
+     */
+    public function expenses(): Collection
+    {
+        return $this->findManyBy(function (Builder $query) {
+            $query
+                ->where(function (Builder $query) {
+                    $query->where('direction', 'outflow')
+                        ->orWhere(function (Builder $query) {
+                            $query
+                                ->where('direction', 'inflow')
+                                ->where('kind', 'refund');
+                        });
+                })
+                ->where('kind', 'purchase');
+        });
+    }
+
+    /**
+     * @param Transaction $transaction
+     * @param array<string, mixed> $attributes
+     * @return bool
+     */
+    public function update(Transaction $transaction, array $attributes): bool
+    {
+        return $transaction->update($attributes);
+    }
+
+    /**
+     * @param Transaction $transaction
+     * @return Collection<int, Transaction>
+     */
+    public function getAllInstallments(Transaction $transaction): Collection
+    {
+        if ($transaction->parent_transaction_id) {
+            return Transaction::where('parent_transaction_id', $transaction->parent_transaction_id)
+                ->orWhere('id', $transaction->parent_transaction_id)
+                ->get();
+        }
+
+        return Transaction::where('parent_transaction_id', $transaction->id)
+            ->orWhere('id', $transaction->id)
+            ->get();
     }
 }
