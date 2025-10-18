@@ -1,5 +1,5 @@
 services:
-    laravel.test:
+    controlei.app:
         build:
             context: './vendor/laravel/sail/runtimes/8.4'
             dockerfile: Dockerfile
@@ -17,16 +17,15 @@ services:
             XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
-            OLLAMA_HOST: http://ollama:11434
         volumes:
             - '.:/var/www/html'
         networks:
             - sail
         depends_on:
-            - winance.mysql
-            - ollama
+            - controlei.mysql
+            - controlei.valkey
 
-    winance.mysql:
+    controlei.mysql:
         image: 'mysql:8.4'
         ports:
             - '${FORWARD_DB_PORT:-3360}:3306'
@@ -51,17 +50,18 @@ services:
             retries: 3
             timeout: 5s
 
-    ollama:
-        image: ollama/ollama:latest
-        container_name: ollama
-        restart: unless-stopped
+    controlei.valkey:
+        image: 'valkey/valkey:latest'
         ports:
-            - "11434:11434"
+            - '${FORWARD_VALKEY_PORT:-6380}:6379'
         volumes:
-            - ollama_models:/root/.ollama
+            - 'sail-valkey:/data'
         networks:
             - sail
-        command: serve
+        healthcheck:
+            test: [ "CMD", "valkey-cli", "ping" ]
+            retries: 3
+            timeout: 5s
 
 networks:
     sail:
@@ -70,5 +70,5 @@ networks:
 volumes:
     sail-mysql:
         driver: local
-    ollama_models:
+    sail-valkey:
         driver: local

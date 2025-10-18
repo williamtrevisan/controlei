@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Actions\GetAllTransactions;
+use App\Actions\GetAllUserTransactions;
 use App\Casts\AsMoney;
 use App\Casts\AsStatementPeriod;
 use App\Enums\TransactionDirection;
@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -57,6 +58,7 @@ use Illuminate\Support\Collection;
  * @property-read ?Transaction $child
  * @property-read ?Collection<int, TransactionMember> $members
  * @property-read ?Statement $statement
+ * @property-read ?TransactionCategoryFeedback $feedback
  */
 #[ObservedBy(TransactionObserver::class)]
 class Transaction extends Model
@@ -177,6 +179,11 @@ class Transaction extends Model
         return $this->belongsTo(Statement::class);
     }
 
+    public function feedback(): HasOne
+    {
+        return $this->hasOne(TransactionCategoryFeedback::class);
+    }
+
     final public function classify(): self
     {
         $this->kind = TransactionKind::fromTransaction($this);
@@ -201,7 +208,7 @@ class Transaction extends Model
 
     public function isRefund(): bool
     {
-        return app()->make(GetAllTransactions::class)
+        return app()->make(GetAllUserTransactions::class)
             ->execute()
             ->reject(fn (Transaction $transaction): bool => $transaction->description === $this->description)
             ->some(function (Transaction $transaction): bool {

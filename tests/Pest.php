@@ -81,6 +81,10 @@ function account(array $attributes = []): Banklink\Entities\Account
             return $this->attributes['digit'] ?? fake()->numerify('#');
         }
 
+        public function balance(): \Brick\Money\Money
+        {
+        }
+
         public function cards(): \Banklink\Accessors\Contracts\CardsAccessor
         {
             return $this->attributes['cards']
@@ -314,6 +318,10 @@ function transaction(array $attributes = []): Banklink\Entities\Transaction
         public function installments(): ?Banklink\Entities\Installment
         {
             return $this->attributes['installments'] ?? null;
+        }
+
+        public function statementPeriod(): ?\Banklink\Entities\StatementPeriod
+        {
         }
 
         public function isRefund(Banklink\Enums\TransactionType $from): bool

@@ -7,7 +7,7 @@ use App\Models\Transaction;
 class ClassifyTransactions
 {
     public function __construct(
-        private readonly GetAllTransactions $getAllTransactions,
+        private readonly GetAllUserTransactions $getAllTransactions,
     ) {
     }
 

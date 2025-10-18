@@ -45,6 +45,7 @@ class IncomeSource extends Model
             'type' => IncomeSourceType::class,
             'frequency' => IncomeFrequency::class,
             'average_amount' => AsMoney::class,
+            'active' => 'boolean',
         ];
     }
 

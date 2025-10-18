@@ -2,10 +2,11 @@
 
 namespace App\Actions;
 
+use App\Models\Category;
 use App\Repositories\Contracts\CategoryRepository;
 use Illuminate\Support\Collection;
 
-class GetAllCategories
+class GetAllActivesCategories
 {
     public function __construct(
         private readonly CategoryRepository $categoryRepository

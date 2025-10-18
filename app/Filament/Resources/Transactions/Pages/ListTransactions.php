@@ -82,8 +82,7 @@ class ListTransactions extends ListRecords
                     ])
                         ->name('syncing transactions')
                         ->onQueue('default')
-//                        ->onConnection('database')
-                        ->onConnection('sync')
+                        ->onConnection('redis')
                         ->allowFailures()
                         ->finally(function () use ($synchronization): void {
                             $synchronization->touch('completed_at');
@@ -143,7 +142,7 @@ class ListTransactions extends ListRecords
                         ])
                             ->name('reclassifying transactions')
                             ->onQueue('default')
-                            ->onConnection('database')
+                            ->onConnection('redis')
                             ->allowFailures()
                             ->finally(function (): void {
                                 Notification::make()

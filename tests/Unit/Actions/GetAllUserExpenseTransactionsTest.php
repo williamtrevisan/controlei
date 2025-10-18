@@ -9,125 +9,125 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
-    $this->actingAs($this->user);
+    $this->account = Account::factory()
+        ->for($this->user = User::factory()->create())
+        ->create();
 
-    $this->account = Account::factory()->create([
-        'user_id' => $this->user->id,
-    ]);
+    $this->actingAs($this->user);
 });
 
 it('returns all outflow purchase transactions for the user', function () {
-    Transaction::factory()->create([
-        'account_id' => $this->account->id,
-        'direction' => 'outflow',
-        'kind' => 'purchase',
-        'description' => 'Grocery',
-    ]);
+    Transaction::factory(count: 2)
+        ->expense()
+        ->sequence(
+            ['description' => 'Grocery'],
+            ['description' => 'Gas'],
+        )
+        ->for($this->account)
+        ->createQuietly();
 
-    Transaction::factory()->create([
-        'account_id' => $this->account->id,
-        'direction' => 'outflow',
-        'kind' => 'purchase',
-        'description' => 'Gas',
-    ]);
+    $transactions = app()->make(GetAllUserExpenseTransactions::class)
+        ->execute();
 
-    $transactions = app()->make(GetAllUserExpenseTransactions::class)->execute();
-
-    expect($transactions)->toHaveCount(2);
+    expect($transactions)
+        ->toHaveCount(2);
 });
 
 it('includes inflow refund transactions', function () {
-    Transaction::factory()->create([
-        'account_id' => $this->account->id,
-        'direction' => 'outflow',
-        'kind' => 'purchase',
-        'description' => 'Purchase',
-    ]);
+    Transaction::factory(count: 2)
+        ->expense()
+        ->sequence(
+            ['description' => 'Purchase'],
+            [
+                'description' => 'Refund',
+                'direction' => 'inflow',
+                'kind' => 'refund',
+            ],
+        )
+        ->for($this->account)
+        ->createQuietly();
 
-    Transaction::factory()->create([
-        'account_id' => $this->account->id,
-        'direction' => 'inflow',
-        'kind' => 'refund',
-        'description' => 'Refund',
-    ]);
+    $transactions = app()->make(GetAllUserExpenseTransactions::class)
+        ->execute();
 
-    $transactions = app()->make(GetAllUserExpenseTransactions::class)->execute();
-
-    expect($transactions)->toHaveCount(2);
+    expect($transactions)
+        ->toHaveCount(2);
 });
 
 it('does not return fee transactions', function () {
-    Transaction::factory()->create([
-        'account_id' => $this->account->id,
-        'direction' => 'outflow',
-        'kind' => 'purchase',
-        'description' => 'Purchase',
-    ]);
+    Transaction::factory(count: 2)
+        ->expense()
+        ->sequence(
+            ['description' => 'Purchase'],
+            [
+                'description' => 'Bank Fee',
+                'kind' => 'fee',
+            ],
+        )
+        ->for($this->account)
+        ->createQuietly();
 
-    Transaction::factory()->create([
-        'account_id' => $this->account->id,
-        'direction' => 'outflow',
-        'kind' => 'fee',
-        'description' => 'Bank Fee',
-    ]);
+    $transactions = app()->make(GetAllUserExpenseTransactions::class)
+        ->execute();
 
-    $transactions = app()->make(GetAllUserExpenseTransactions::class)->execute();
-
-    expect($transactions)->toHaveCount(1);
-    expect($transactions->first()->description)->toBe('Purchase');
+    expect($transactions)
+        ->toHaveCount(1)
+        ->first()->description->toBe('Purchase');
 });
 
 it('does not return cashback transactions', function () {
-    Transaction::factory()->create([
-        'account_id' => $this->account->id,
-        'direction' => 'outflow',
-        'kind' => 'purchase',
-        'description' => 'Purchase',
-    ]);
+    Transaction::factory(count: 2)
+        ->expense()
+        ->sequence(
+            ['description' => 'Purchase'],
+            [
+                'description' => 'Cashback',
+                'kind' => 'cashback',
+            ],
+        )
+        ->for($this->account)
+        ->createQuietly();
 
-    Transaction::factory()->create([
-        'account_id' => $this->account->id,
-        'direction' => 'inflow',
-        'kind' => 'cashback',
-        'description' => 'Cashback',
-    ]);
+    $transactions = app()->make(GetAllUserExpenseTransactions::class)
+        ->execute();
 
-    $transactions = app()->make(GetAllUserExpenseTransactions::class)->execute();
-
-    expect($transactions)->toHaveCount(1);
-    expect($transactions->first()->description)->toBe('Purchase');
+    expect($transactions)
+        ->toHaveCount(1)
+        ->first()->description->toBe('Purchase');
 });
 
 it('only returns transactions for the authenticated user', function () {
-    $otherUser = User::factory()->create();
-    $otherAccount = Account::factory()->create([
-        'user_id' => $otherUser->id,
-    ]);
+    $account = Account::factory()
+        ->for($this->user = User::factory()->create())
+        ->create();
 
-    Transaction::factory()->create([
-        'account_id' => $this->account->id,
-        'direction' => 'outflow',
-        'kind' => 'purchase',
-        'description' => 'My Expense',
-    ]);
+    Transaction::factory()
+        ->expense()
+        ->for($this->account)
+        ->createQuietly([
+            'description' => 'My Expense',
+        ]);
 
-    Transaction::factory()->create([
-        'account_id' => $otherAccount->id,
-        'direction' => 'outflow',
-        'kind' => 'purchase',
-        'description' => 'Other Expense',
-    ]);
+    Transaction::factory()
+        ->expense()
+        ->for($account)
+        ->createQuietly([
+            'description' => 'Other Expense',
+        ]);
 
-    $transactions = app()->make(GetAllUserExpenseTransactions::class)->execute();
+    $transactions = app()->make(GetAllUserExpenseTransactions::class)
+        ->execute();
 
-    expect($transactions)->toHaveCount(1);
-    expect($transactions->first()->description)->toBe('My Expense');
+    expect($transactions)
+        ->toHaveCount(1)
+        ->first()->description->toBe('My Expense');
 });
 
 it('returns empty collection when user has no expense transactions', function () {
-    $transactions = app()->make(GetAllUserExpenseTransactions::class)->execute();
+    $transactions = app()->make(GetAllUserExpenseTransactions::class)
+        ->execute();
 
-    expect($transactions)->toBeEmpty();
+    expect($transactions)
+        ->toBeEmpty();
 });
 

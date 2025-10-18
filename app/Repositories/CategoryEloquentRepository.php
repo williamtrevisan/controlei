@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\Models\Category;
 use App\Repositories\Contracts\CategoryRepository;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -17,8 +16,7 @@ class CategoryEloquentRepository implements CategoryRepository
 
     protected function builder(): Builder
     {
-        return $this->model
-            ->newQuery();
+        return $this->model->newQuery();
     }
 
     public function actives(): Collection
@@ -27,17 +25,5 @@ class CategoryEloquentRepository implements CategoryRepository
             ->where('active', true)
             ->get();
     }
-
-    public function findById(int $id): ?Category
-    {
-        return $this->builder()
-            ->find($id);
-    }
-
-    public function findByDescription(string $description): ?Category
-    {
-        return $this->builder()
-            ->where('description', $description)
-            ->first();
-    }
 }
+

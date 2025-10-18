@@ -5,7 +5,7 @@ namespace App\Actions;
 use App\Repositories\Contracts\TransactionRepository;
 use Illuminate\Support\Collection;
 
-class GetAllTransactions
+class GetAllUserTransactions
 {
     public function __construct(
         private readonly TransactionRepository $transactionRepository
