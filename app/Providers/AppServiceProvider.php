@@ -4,21 +4,25 @@ namespace App\Providers;
 
 use App\Models\Account;
 use App\Models\Card;
+use App\Models\Category;
 use App\Models\IncomeSource;
 use App\Models\Invite;
 use App\Models\Statement;
 use App\Models\Transaction;
+use App\Models\TransactionCategoryFeedback;
 use App\Models\TransactionMember;
 use App\Models\User;
-use Illuminate\Notifications\DatabaseNotification;
 use App\Repositories\AccountEloquentRepository;
 use App\Repositories\CardEloquentRepository;
+use App\Repositories\CategoryEloquentRepository;
 use App\Repositories\Contracts\AccountRepository;
 use App\Repositories\Contracts\CardRepository;
+use App\Repositories\Contracts\CategoryRepository;
 use App\Repositories\Contracts\IncomeSourceRepository;
 use App\Repositories\Contracts\InviteRepository;
 use App\Repositories\Contracts\NotificationRepository;
 use App\Repositories\Contracts\StatementRepository;
+use App\Repositories\Contracts\TransactionCategoryFeedbackRepository;
 use App\Repositories\Contracts\TransactionMemberRepository;
 use App\Repositories\Contracts\TransactionRepository;
 use App\Repositories\Contracts\UserRepository;
@@ -26,14 +30,17 @@ use App\Repositories\IncomeSourceEloquentRepository;
 use App\Repositories\InviteEloquentRepository;
 use App\Repositories\NotificationEloquentRepository;
 use App\Repositories\StatementEloquentRepository;
+use App\Repositories\TransactionCategoryFeedbackEloquentRepository;
 use App\Repositories\TransactionEloquentRepository;
 use App\Repositories\TransactionMemberEloquentRepository;
 use App\Repositories\UserEloquentRepository;
 use App\Services\Contracts;
 use App\Services\InstallmentGenerator;
 use Filament\Pages\Page;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
-use Laravel\Telescope\Telescope;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -46,19 +53,33 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->scoped(Contracts\InstallmentsGenerator::class, InstallmentGenerator::class);
 
-        $this->app->singleton(IncomeSourceRepository::class, fn () => new IncomeSourceEloquentRepository(new IncomeSource()));
-        $this->app->singleton(AccountRepository::class, fn () => new AccountEloquentRepository(new Account()));
-        $this->app->singleton(CardRepository::class, fn () => new CardEloquentRepository(new Card()));
-        $this->app->singleton(StatementRepository::class, fn () => new StatementEloquentRepository(new Statement()));
-        $this->app->singleton(TransactionRepository::class, fn () => new TransactionEloquentRepository(new Transaction()));
-        $this->app->singleton(InviteRepository::class, fn () => new InviteEloquentRepository(new Invite()));
-        $this->app->singleton(TransactionMemberRepository::class, fn () => new TransactionMemberEloquentRepository(new TransactionMember()));
-        $this->app->singleton(UserRepository::class, fn () => new UserEloquentRepository(new User()));
-        $this->app->singleton(NotificationRepository::class, fn () => new NotificationEloquentRepository(new DatabaseNotification()));
+        $this->app->singleton(IncomeSourceRepository::class, fn () => new IncomeSourceEloquentRepository(new IncomeSource));
+        $this->app->singleton(AccountRepository::class, fn () => new AccountEloquentRepository(new Account));
+        $this->app->singleton(CardRepository::class, fn () => new CardEloquentRepository(new Card));
+        $this->app->singleton(StatementRepository::class, fn () => new StatementEloquentRepository(new Statement));
+        $this->app->singleton(TransactionRepository::class, fn () => new TransactionEloquentRepository(new Transaction));
+        $this->app->singleton(TransactionCategoryFeedbackRepository::class, fn () => new TransactionCategoryFeedbackEloquentRepository(new TransactionCategoryFeedback));
+        $this->app->singleton(CategoryRepository::class, fn () => new CategoryEloquentRepository(new Category));
+        $this->app->singleton(InviteRepository::class, fn () => new InviteEloquentRepository(new Invite));
+        $this->app->singleton(TransactionMemberRepository::class, fn () => new TransactionMemberEloquentRepository(new TransactionMember));
+        $this->app->singleton(UserRepository::class, fn () => new UserEloquentRepository(new User));
+        $this->app->singleton(NotificationRepository::class, fn () => new NotificationEloquentRepository(new DatabaseNotification));
     }
 
     public function boot(): void
     {
         Page::alignFormActionsEnd();
+
+        Http::macro('categorize', function (): PendingRequest {
+            return Http::timeout(0)
+                ->accept('application/x-ndjson')
+                ->baseUrl(config('services.categorizer.url'));
+        });
+
+        Http::macro('lab', function (): PendingRequest {
+            return Http::timeout(0)
+                ->withToken(config('services.lab.token'))
+                ->baseUrl(config('services.lab.url'));
+        });
     }
 }

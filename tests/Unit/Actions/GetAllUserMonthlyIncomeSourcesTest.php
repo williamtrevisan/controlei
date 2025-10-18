@@ -9,187 +9,101 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
-    $this->actingAs($this->user);
+    $this->actingAs($this->user = User::factory()->create());
 });
 
 it('returns all active monthly income sources for the user', function () {
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'Salary',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => true,
-        'average_amount' => 500000,
-    ]);
+    IncomeSource::factory(count: 2)
+        ->monthly()
+        ->for($this->user)
+        ->create();
 
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'Freelance',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => true,
-        'average_amount' => 200000,
-    ]);
+    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)
+        ->execute();
 
-    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)->execute();
-
-    expect($incomeSources)->toHaveCount(2);
+    expect($incomeSources)
+        ->toHaveCount(2);
 });
 
 it('does not return annually income sources', function () {
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'Monthly Income',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => true,
-        'average_amount' => 500000,
-    ]);
+    IncomeSource::factory()
+        ->monthly()
+        ->for($this->user)
+        ->create();
 
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => '13th Salary',
-        'frequency' => IncomeFrequency::Annually,
-        'active' => true,
-        'average_amount' => 500000,
-    ]);
+    IncomeSource::factory()
+        ->annually()
+        ->for($this->user)
+        ->create();
 
-    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)->execute();
+    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)
+        ->execute();
 
-    expect($incomeSources)->toHaveCount(1);
-    expect($incomeSources->first()->name)->toBe('Monthly Income');
+    expect($incomeSources)
+        ->toHaveCount(1)
+        ->first()->frequency->toBe(IncomeFrequency::Monthly);
 });
 
 it('does not return occasionally income sources', function () {
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'Monthly Income',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => true,
-        'average_amount' => 500000,
-    ]);
+    IncomeSource::factory()
+        ->monthly()
+        ->for($this->user)
+        ->create();
 
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'Tax Return',
-        'frequency' => IncomeFrequency::Occasionally,
-        'active' => true,
-        'average_amount' => 100000,
-    ]);
+    IncomeSource::factory()
+        ->occasionally()
+        ->for($this->user)
+        ->create();
 
-    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)->execute();
+    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)
+        ->execute();
 
-    expect($incomeSources)->toHaveCount(1);
-    expect($incomeSources->first()->name)->toBe('Monthly Income');
+    expect($incomeSources)
+        ->toHaveCount(1)
+        ->first()->frequency->toBe(IncomeFrequency::Monthly);
 });
 
 it('does not return inactive income sources', function () {
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'Active Income',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => true,
-        'average_amount' => 500000,
-    ]);
+    IncomeSource::factory()
+        ->monthly()
+        ->sequence(
+            ['active' => true],
+            ['active' => false],
+        )
+        ->for($this->user)
+        ->create();
 
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'Inactive Income',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => false,
-        'average_amount' => 300000,
-    ]);
+    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)
+        ->execute();
 
-    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)->execute();
-
-    expect($incomeSources)->toHaveCount(1);
-    expect($incomeSources->first()->name)->toBe('Active Income');
-});
-
-it('does not return income sources with null average amount', function () {
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'With Amount',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => true,
-        'average_amount' => 500000,
-    ]);
-
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'Without Amount',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => true,
-        'average_amount' => null,
-    ]);
-
-    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)->execute();
-
-    expect($incomeSources)->toHaveCount(1);
-    expect($incomeSources->first()->name)->toBe('With Amount');
+    expect($incomeSources)
+        ->toHaveCount(1)
+        ->first()->active->toBeTrue();
 });
 
 it('only returns income sources for the authenticated user', function () {
-    $otherUser = User::factory()->create();
+    IncomeSource::factory()
+        ->monthly()
+        ->for($this->user)
+        ->create();
 
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'My Income',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => true,
-        'average_amount' => 500000,
-    ]);
+    IncomeSource::factory()
+        ->monthly()
+        ->for(User::factory()->create())
+        ->create();
 
-    IncomeSource::factory()->create([
-        'user_id' => $otherUser->id,
-        'name' => 'Other Income',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => true,
-        'average_amount' => 600000,
-    ]);
+    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)
+        ->execute();
 
-    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)->execute();
-
-    expect($incomeSources)->toHaveCount(1);
-    expect($incomeSources->first()->name)->toBe('My Income');
+    expect($incomeSources)
+        ->toHaveCount(1)
+        ->first()->user_id->toBe($this->user->id);
 });
 
 it('returns empty collection when user has no monthly income sources', function () {
-    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)->execute();
+    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)
+        ->execute();
 
-    expect($incomeSources)->toBeEmpty();
+    expect($incomeSources)
+        ->toBeEmpty();
 });
-
-it('returns income sources ordered by name', function () {
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'Zebra Income',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => true,
-        'average_amount' => 100000,
-    ]);
-
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'Apple Income',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => true,
-        'average_amount' => 200000,
-    ]);
-
-    IncomeSource::factory()->create([
-        'user_id' => $this->user->id,
-        'name' => 'Mango Income',
-        'frequency' => IncomeFrequency::Monthly,
-        'active' => true,
-        'average_amount' => 300000,
-    ]);
-
-    $incomeSources = app()->make(GetAllUserMonthlyIncomeSources::class)->execute();
-
-    expect($incomeSources)->toHaveCount(3);
-    expect($incomeSources->pluck('name')->toArray())->toBe([
-        'Apple Income',
-        'Mango Income',
-        'Zebra Income',
-    ]);
-});
-

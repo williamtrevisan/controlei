@@ -18,6 +18,7 @@ class TransactionDataFactory extends Factory
             cardId: $attributes['cardId'] ?? null,
             incomeSourceId: $attributes['incomeSourceId'] ?? null,
             expenseId: $attributes['expenseId'] ?? null,
+            categoryId: $attributes['categoryId'] ?? null,
             statementId: $attributes['statementId'] ?? null,
             parentTransactionId: $attributes['parentTransactionId'] ?? null,
             date: $attributes['date'] ?? now(),

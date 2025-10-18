@@ -30,4 +30,28 @@ class IncomeSourceFactory extends Factory
             'active' => true,
         ];
     }
+
+    public function annually(): self
+    {
+        return $this
+            ->state([
+                'frequency' => IncomeFrequency::Annually,
+            ]);
+    }
+
+    public function monthly(): self
+    {
+        return $this
+            ->state([
+                'frequency' => IncomeFrequency::Monthly,
+            ]);
+    }
+
+    public function occasionally(): self
+    {
+        return $this
+            ->state([
+                'frequency' => IncomeFrequency::Occasionally,
+            ]);
+    }
 }

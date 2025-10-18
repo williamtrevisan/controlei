@@ -24,12 +24,13 @@ class TransactionEloquentRepository implements TransactionRepository
         return $this->model
             ->newQuery()
             ->where(function (Builder $query) {
-                $query->whereHas('account', function (Builder $subQuery) {
-                    $subQuery->where('user_id', auth()->id());
-                })
-                ->orWhereHas('members', function (Builder $subQuery) {
-                    $subQuery->where('member_id', auth()->id());
-                });
+                $query
+                    ->whereHas('account', function (Builder $subQuery) {
+                        $subQuery->where('user_id', auth()->id());
+                    })
+                    ->orWhereHas('members', function (Builder $subQuery) {
+                        $subQuery->where('member_id', auth()->id());
+                    });
             });
     }
 
@@ -127,15 +128,28 @@ class TransactionEloquentRepository implements TransactionRepository
         return $this->findManyBy(function (Builder $query) {
             $query
                 ->where(function (Builder $query) {
-                    $query->where('direction', 'outflow')
+                    $query
+                        ->where('direction', 'outflow')
+                        ->where('kind', 'purchase')
                         ->orWhere(function (Builder $query) {
                             $query
                                 ->where('direction', 'inflow')
                                 ->where('kind', 'refund');
                         });
-                })
-                ->where('kind', 'purchase');
+                });
         });
+    }
+
+    public function update(string|Model $value, array $attributes, string $key = 'id'): bool
+    {
+        if ($value instanceof Model) {
+            return $this->updateBy($value, $attributes);
+        }
+
+        return (bool) $this->builder()
+            ->where($key, $value)
+            ->first()
+            ?->update($attributes);
     }
 
     /**
@@ -143,7 +157,7 @@ class TransactionEloquentRepository implements TransactionRepository
      * @param array<string, mixed> $attributes
      * @return bool
      */
-    public function update(Transaction $transaction, array $attributes): bool
+    public function updateBy(Transaction $transaction, array $attributes): bool
     {
         return $transaction->update($attributes);
     }

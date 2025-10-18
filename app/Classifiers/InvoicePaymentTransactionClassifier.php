@@ -24,6 +24,7 @@ final class InvoicePaymentTransactionClassifier implements TransactionClassifier
     {
         return $this->getAllCardMatcherRegex
             ->execute()
+            ->filter()
             ->some(fn (string $pattern): bool => str($description)->isMatch($pattern));
     }
 }

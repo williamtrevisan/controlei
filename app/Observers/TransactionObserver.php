@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Actions\CategorizeManyTransactions;
 use App\Actions\CreateFutureTransactions;
 use App\Models\Transaction;
 use App\Repositories\Contracts\TransactionRepository;

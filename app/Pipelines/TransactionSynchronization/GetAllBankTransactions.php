@@ -5,6 +5,7 @@ namespace App\Pipelines\TransactionSynchronization;
 use App\DataTransferObjects\SynchronizationData;
 use App\Pipelines\TransactionSynchronization\Actions\AssignAccountTransactionStatement;
 use App\Pipelines\TransactionSynchronization\Actions\AssignCardTransactionStatement;
+use App\Pipelines\TransactionSynchronization\Actions\AssignCategory;
 use App\Pipelines\TransactionSynchronization\Actions\AssignExpense;
 use App\Pipelines\TransactionSynchronization\Actions\AssignIncomeSource;
 use App\Pipelines\TransactionSynchronization\Actions\AssignParentTransaction;
@@ -38,8 +39,8 @@ class GetAllBankTransactions
                     ExtractCardTransactions::class,
                     AssignCardTransactionStatement::class,
                     CreateData::class,
-                    AssignExpense::class,
                     AssignIncomeSource::class,
+                    AssignExpense::class,
                     AssignParentTransaction::class,
                 ])
                 ->thenReturn();

@@ -1,5 +1,5 @@
 services:
-    laravel.test:
+    controlei.app:
         build:
             context: './vendor/laravel/sail/runtimes/8.4'
             dockerfile: Dockerfile
@@ -22,9 +22,10 @@ services:
         networks:
             - sail
         depends_on:
-            - winance.mysql
+            - controlei.mysql
+            - controlei.valkey
 
-    winance.mysql:
+    controlei.mysql:
         image: 'mysql:8.4'
         ports:
             - '${FORWARD_DB_PORT:-3360}:3306'
@@ -48,9 +49,26 @@ services:
                 - '-p${DB_PASSWORD}'
             retries: 3
             timeout: 5s
+
+    controlei.valkey:
+        image: 'valkey/valkey:latest'
+        ports:
+            - '${FORWARD_VALKEY_PORT:-6380}:6379'
+        volumes:
+            - 'sail-valkey:/data'
+        networks:
+            - sail
+        healthcheck:
+            test: [ "CMD", "valkey-cli", "ping" ]
+            retries: 3
+            timeout: 5s
+
 networks:
     sail:
         driver: bridge
+
 volumes:
     sail-mysql:
+        driver: local
+    sail-valkey:
         driver: local

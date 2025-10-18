@@ -2,9 +2,11 @@
 
 namespace App\Jobs;
 
+use App\Actions\CategorizeManyTransactions;
 use App\Actions\ClassifyExpenses;
 use App\Actions\ClassifyIncomeSources;
 use App\Actions\ClassifyTransactions;
+use App\Actions\GetAllUserTransactions;
 use App\Models\User;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
@@ -26,23 +28,34 @@ class ReclassifyAllTransactions implements ShouldQueue
 
     public ?int $maxExceptions = 1;
 
+    public int $timeout = 0;
+
     public function __construct(
         private readonly User $user,
-    ) {
-    }
+    ) {}
 
     public function handle(
         ClassifyTransactions $classifyTransactions,
         ClassifyExpenses $classifyExpenses,
-        ClassifyIncomeSources $classifyIncomeSources
+        ClassifyIncomeSources $classifyIncomeSources,
+        CategorizeManyTransactions $categorizeManyTransactions,
+        GetAllUserTransactions $getAllTransactions
     ): void {
         auth()->setUser($this->user);
 
-        DB::transaction(function () use ($classifyTransactions, $classifyExpenses, $classifyIncomeSources): void {
+        DB::transaction(function () use (
+            $classifyTransactions,
+            $classifyExpenses,
+            $classifyIncomeSources,
+            $categorizeManyTransactions,
+            $getAllTransactions
+        ): void {
             $classifyTransactions->execute();
             $classifyExpenses->execute();
             $classifyIncomeSources->execute();
         });
+
+        $categorizeManyTransactions->execute($getAllTransactions->execute());
     }
 
     public function tags(): array
@@ -53,4 +66,3 @@ class ReclassifyAllTransactions implements ShouldQueue
         ];
     }
 }
-

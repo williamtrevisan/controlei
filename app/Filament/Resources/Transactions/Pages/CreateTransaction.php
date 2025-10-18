@@ -3,11 +3,13 @@
 namespace App\Filament\Resources\Transactions\Pages;
 
 use App\Actions\FindOrCreateManyStatements;
+use App\Actions\UpdateTransactionCategory;
 use App\Enums\TransactionDirection;
 use App\Enums\TransactionKind;
 use App\Enums\TransactionPaymentMethod;
 use App\Filament\Resources\Transactions\TransactionResource;
 use App\Models\Card;
+use App\Models\Transaction;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
@@ -50,5 +52,17 @@ class CreateTransaction extends CreateRecord
             'kind' => TransactionKind::Purchase,
             'payment_method' => TransactionPaymentMethod::Credit,
         ]));
+    }
+
+    protected function afterCreate(): void
+    {
+        /** @var Transaction $transaction */
+        $transaction = $this->record;
+        $categoryId = $this->data['category_id'] ?? null;
+
+        if ($categoryId) {
+            app()->make(UpdateTransactionCategory::class)
+                ->execute($transaction, $categoryId);
+        }
     }
 }

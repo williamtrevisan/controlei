@@ -8,7 +8,6 @@ use App\Enums\TransactionPaymentMethod;
 use App\Enums\TransactionStatus;
 use App\Models\Statement;
 use App\Models\Transaction;
-use App\ValueObjects\StatementPeriod;
 use Banklink\Entities;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Carbon;
@@ -29,6 +28,7 @@ readonly class TransactionData implements Arrayable
         public ?string $cardId,
         public ?string $incomeSourceId,
         public ?string $expenseId,
+        public ?int $categoryId = null,
         public ?string $statementId,
         public ?string $parentTransactionId,
         public Carbon $date,
@@ -52,15 +52,14 @@ readonly class TransactionData implements Arrayable
         Entities\Transaction $transaction,
         string $accountId,
         ?string $cardId = null,
-        ?string $incomeSourceId = null,
-        ?string $expenseId = null,
         ?string $statementId = null,
     ): self {
         return new self(
             accountId: $accountId,
             cardId: $cardId,
-            incomeSourceId: $incomeSourceId,
-            expenseId: $expenseId,
+            incomeSourceId: null,
+            expenseId: null,
+            categoryId: 8,
             statementId: $statementId,
             parentTransactionId: null,
             date: $transaction->date(),
@@ -86,6 +85,7 @@ readonly class TransactionData implements Arrayable
             cardId: $transaction->card?->id,
             incomeSourceId: null,
             expenseId: null,
+            categoryId: $transaction->category?->id,
             statementId: $statement->id,
             parentTransactionId: $transaction->id,
             date: $transaction->date,
@@ -108,6 +108,7 @@ readonly class TransactionData implements Arrayable
             cardId: $this->cardId,
             incomeSourceId: $this->incomeSourceId,
             expenseId: $this->expenseId,
+            categoryId: $this->categoryId,
             statementId: $statementId,
             parentTransactionId: $this->parentTransactionId,
             date: $this->date,
@@ -130,6 +131,7 @@ readonly class TransactionData implements Arrayable
             cardId: $this->cardId,
             incomeSourceId: $this->incomeSourceId,
             expenseId: $expenseId,
+            categoryId: $this->categoryId,
             statementId: $this->statementId,
             parentTransactionId: $this->parentTransactionId,
             date: $this->date,
@@ -152,6 +154,7 @@ readonly class TransactionData implements Arrayable
             cardId: $this->cardId,
             incomeSourceId: $incomeSourceId,
             expenseId: $this->expenseId,
+            categoryId: $this->categoryId,
             statementId: $this->statementId,
             parentTransactionId: $this->parentTransactionId,
             date: $this->date,
@@ -174,6 +177,7 @@ readonly class TransactionData implements Arrayable
             cardId: $this->cardId,
             incomeSourceId: $this->incomeSourceId,
             expenseId: $this->expenseId,
+            categoryId: $this->categoryId,
             statementId: $this->statementId,
             parentTransactionId: $parentTransactionId,
             date: $this->date,
@@ -197,6 +201,7 @@ readonly class TransactionData implements Arrayable
             'card_id' => $this->cardId,
             'income_source_id' => $this->incomeSourceId,
             'expense_id' => $this->expenseId,
+            'category_id' => $this->categoryId,
             'statement_id' => $this->statementId,
             'parent_transaction_id' => $this->parentTransactionId,
             'date' => $this->date,

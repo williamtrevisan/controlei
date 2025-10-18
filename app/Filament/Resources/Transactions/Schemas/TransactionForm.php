@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Transactions\Schemas;
 
 use App\Actions\GetAllUserCards;
 use App\Models\Card;
+use App\Models\Category;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -50,6 +51,14 @@ class TransactionForm
                                     ->placeholder('Geladeira Magazine Luiza')
                                     ->maxLength(255)
                                     ->columnSpanFull(),
+
+                                Select::make('category_id')
+                                    ->label('Categoria')
+                                    ->options(Category::where('active', true)->pluck('description', 'id'))
+                                    ->searchable()
+                                    ->native(false)
+                                    ->placeholder('Selecione uma categoria (opcional)')
+                                    ->helperText('A categoria será atribuída automaticamente se não selecionada'),
 
                                 TextInput::make('amount')
                                     ->label('Valor')
