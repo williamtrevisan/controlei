@@ -48,4 +48,9 @@ enum TransactionKind: string implements HasColor, HasLabel
             TransactionKind::Refund => 'Estorno',
         };
     }
+
+    public function isInvoicePayment(): bool
+    {
+        return $this === TransactionKind::InvoicePayment;
+    }
 }

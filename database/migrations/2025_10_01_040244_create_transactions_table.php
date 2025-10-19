@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignUuid('card_id')->nullable()->constrained();
             $table->foreignUuid('income_source_id')->nullable()->constrained();
             $table->foreignUuid('expense_id')->nullable()->constrained();
+            $table->foreignId('category_id')->nullable()->constrained();
             $table->foreignUuid('statement_id')->nullable()->constrained();
             $table->foreignUuid('parent_transaction_id')->nullable()->constrained('transactions');
             $table->date('date');

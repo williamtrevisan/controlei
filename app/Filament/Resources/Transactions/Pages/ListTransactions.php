@@ -7,7 +7,7 @@ use App\Events\SynchronizationStarted;
 use App\Filament\Imports\TransactionImporter;
 use App\Filament\Resources\Transactions\TransactionResource;
 use App\Filament\Resources\Transactions\Widgets\MonthlyStatement;
-use App\Filament\Resources\Transactions\Widgets\Stats\AccountBalanceStat;
+use App\Filament\Widgets\TopCategoriesStats;
 use App\Jobs\FetchAndSynchronizeTransactions;
 use App\Jobs\ReclassifyAllTransactions;
 use App\Models\Synchronization;
@@ -82,7 +82,7 @@ class ListTransactions extends ListRecords
                     ])
                         ->name('syncing transactions')
                         ->onQueue('default')
-                        ->onConnection('database')
+                        ->onConnection('redis')
                         ->allowFailures()
                         ->finally(function () use ($synchronization): void {
                             $synchronization->touch('completed_at');
@@ -142,7 +142,7 @@ class ListTransactions extends ListRecords
                         ])
                             ->name('reclassifying transactions')
                             ->onQueue('default')
-                            ->onConnection('database')
+                            ->onConnection('redis')
                             ->allowFailures()
                             ->finally(function (): void {
                                 Notification::make()
@@ -169,8 +169,8 @@ class ListTransactions extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            AccountBalanceStat::class,
             MonthlyStatement::class,
+            TopCategoriesStats::class,
         ];
     }
 

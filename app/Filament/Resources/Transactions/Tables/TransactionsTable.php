@@ -4,15 +4,18 @@ namespace App\Filament\Resources\Transactions\Tables;
 
 use App\Actions\GetAllConnectedUsers;
 use App\Actions\ShareManyTransactionsWithUser;
-use App\Enums\TransactionStatus;
+use App\Actions\UpdateTransactionCategory;
+use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
@@ -22,11 +25,51 @@ class TransactionsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function ($query) {
+                return $query
+                    ->orderByRaw('CASE WHEN current_installment IS NOT NULL THEN 0 ELSE 1 END')
+                    ->orderBy('date', 'asc');
+            })
             ->columns([
                 TextColumn::make('date')
                     ->label('Data')
                     ->date('d/m/Y')
                     ->sortable(),
+
+                TextColumn::make('description')
+                    ->label('Descrição')
+                    ->limit($limit = 30)
+                    ->tooltip(fn ($state) => str($state)->length() > $limit ? $state : null),
+
+                SelectColumn::make('category_id')
+                    ->label('Categoria')
+                    ->options(Category::where('active', true)->pluck('description', 'id'))
+                    ->afterStateUpdated(function (Transaction $record, $state) {
+                        app()->make(UpdateTransactionCategory::class)
+                            ->execute($record, (int) $state);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Obrigado pela correção!')
+                            ->body('Cada ajuste ajuda o sistema a aprender e deixar as categorias mais precisas.')
+                            ->icon(Heroicon::OutlinedArrowTrendingUp)
+                            ->send();
+                    })
+                    ->searchableOptions()
+                    ->selectablePlaceholder(false)
+                    ->native(false)
+                    ->disabled(fn (Transaction $transaction) => $transaction->kind->isInvoicePayment()),
+
+                TextColumn::make('kind')
+                    ->label('Tipo')
+                    ->getStateUsing(function (Transaction $transaction) {
+                        if ($incomeSource = $transaction->incomeSource) {
+                            return $incomeSource->type;
+                        }
+
+                        return $transaction->kind;
+                    })
+                    ->badge(),
 
                 TextColumn::make('amount')
                     ->label('Valor')
@@ -51,31 +94,14 @@ class TransactionsTable
                     })
                     ->alignment(Alignment::Right),
 
-                TextColumn::make('installments')
-                    ->label('Parcela')
-                    ->alignment(Alignment::Center),
-
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
                     ->visible(fn (?Transaction $transaction) => ! $transaction?->status->isPaid()),
 
-                TextColumn::make('kind')
-                    ->label('Tipo')
-                    ->getStateUsing(function (Transaction $transaction) {
-                        if ($incomeSource = $transaction->incomeSource) {
-                            return $incomeSource->type;
-                        }
-
-                        return $transaction->kind;
-                    })
-                    ->badge(),
-
-                TextColumn::make('description')
-                    ->label('Descrição')
-                    ->limit(60)
-                    ->tooltip(fn ($state) => str($state)->length() > 60 ? $state : null)
-                    ->width('100%'),
+                TextColumn::make('installments')
+                    ->label('Parcela')
+                    ->alignment(Alignment::Center),
             ])
             ->groupedBulkActions([
                 BulkAction::make('share')

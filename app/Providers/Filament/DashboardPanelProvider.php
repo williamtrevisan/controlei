@@ -5,18 +5,15 @@ namespace App\Providers\Filament;
 use App\Filament\Resources\Invites\InviteResource;
 use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Forms\Components\TextInput;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\MenuItem;
-use Filament\Notifications\Notification;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Schemas\Components\Section;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -24,6 +21,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class DashboardPanelProvider extends PanelProvider
@@ -49,6 +47,24 @@ class DashboardPanelProvider extends PanelProvider
                 FilamentInfoWidget::class,
             ])
             ->sidebarCollapsibleOnDesktop()
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_BEFORE,
+                fn () => Blade::render(<<<'HTML'
+                    <style>
+                        .fi-sidebar-account-balance {
+                            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.15) !important;
+                        }
+
+                        .dark .fi-sidebar-account-balance {
+                            box-shadow: 0 1px 3px 0 rgba(255, 255, 255, 0.1), 0 1px 2px 0 rgba(255, 255, 255, 0.15) !important;
+                        }
+                    </style>
+
+                    <div x-show="! $store.sidebar?.isOpen === false" x-transition>
+                        @livewire(\App\Filament\Resources\Transactions\Widgets\Stats\AccountBalanceStat::class)
+                    </div>
+                HTML)
+            )
             ->databaseNotifications()
             ->userMenuItems([
                 Action::make('invite_code')

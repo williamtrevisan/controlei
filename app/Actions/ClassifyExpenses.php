@@ -22,11 +22,11 @@ class ClassifyExpenses
             ->execute()
             ->each(function (Transaction $transaction) use ($expenses): void {
                 $expense = $expenses
+                    ->where('matcher_regex')
                     ->first(fn (Expense $expense): bool => str($transaction->description)->isMatch($expense->matcher_regex));
                 if (! $expense) {
                     return;
                 }
-
 
                 $this->updateTransactionExpense->execute($transaction, $expense);
             });

@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'categorizer' => [
+        'url' => env('CATEGORIZER_SERVICE_URL', 'http://categorizer:8080'),
+    ],
+
+    'lab' => [
+        'url' => env('LAB_SERVICE_URL', 'http://training:5000'),
+        'token' => env('LAB_API_TOKEN'),
+    ],
+
 ];
