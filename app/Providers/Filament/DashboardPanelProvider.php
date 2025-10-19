@@ -61,7 +61,7 @@ class DashboardPanelProvider extends PanelProvider
                     </style>
 
                     <div x-show="! $store.sidebar?.isOpen === false" x-transition>
-                        @livewire(\App\Filament\Resources\Transactions\Widgets\Stats\AccountBalanceStat::class)
+                        @livewire(\App\Filament\Resources\Accounts\Widgets\AccountBalanceStat::class)
                     </div>
                 HTML)
             )
