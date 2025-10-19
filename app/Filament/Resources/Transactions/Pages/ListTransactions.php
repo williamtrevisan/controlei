@@ -7,7 +7,7 @@ use App\Events\SynchronizationStarted;
 use App\Filament\Imports\TransactionImporter;
 use App\Filament\Resources\Transactions\TransactionResource;
 use App\Filament\Resources\Transactions\Widgets\MonthlyStatement;
-use App\Filament\Resources\Transactions\Widgets\TopCategoriesStats;
+use App\Filament\Widgets\TopCategoriesStats;
 use App\Jobs\FetchAndSynchronizeTransactions;
 use App\Jobs\ReclassifyAllTransactions;
 use App\Models\Synchronization;
