@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
+ * @property ?int $category_id
  * @property string $description
  * @property ExpenseFrequency $frequency
  * @property string $matcher_regex
@@ -27,6 +28,7 @@ class Expense extends Model
 
     protected $fillable = [
         'user_id',
+        'category_id',
         'description',
         'frequency',
         'matcher_regex',
@@ -45,6 +47,11 @@ class Expense extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 
     public function transactions(): HasMany

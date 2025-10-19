@@ -1,6 +1,6 @@
 <?php
 
-use App\Filament\Resources\Transactions\Widgets\Stats\AccountBalanceStat;
+use App\Filament\Resources\Accounts\Widgets\AccountBalanceStat;
 use App\Models\Account;
 use App\Models\User;
 use Livewire\Livewire;

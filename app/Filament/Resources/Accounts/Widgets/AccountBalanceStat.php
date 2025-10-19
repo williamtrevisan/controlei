@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Filament\Resources\Transactions\Widgets\Stats;
+namespace App\Filament\Resources\Accounts\Widgets;
 
 use App\Actions\GetUserAccount;
 use Brick\Money\Money;
 use Filament\Support\Colors\Color;
-use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Arr;
 
 class AccountBalanceStat extends StatsOverviewWidget
 {
@@ -23,25 +23,35 @@ class AccountBalanceStat extends StatsOverviewWidget
             ? '****'
             : $balance->formatTo('pt_BR');
 
+        $color = $this->color($balance);
+
         return [
-            Stat::make('Saldo atual', $formattedBalance)
-                ->description('Saldo disponível na sua conta bancária')
-                ->icon(Heroicon::OutlinedBanknotes)
-                ->color($this->color($balance)),
+            Stat::make('Saldo da sua conta bancária', $formattedBalance)
+                ->extraAttributes([
+                    'class' => 'fi-sidebar-account-balance',
+                    'style' => <<<CSS
+                        background-color: transparent;
+                        padding: 0.435rem 0.875rem;
+                        border-left: 3px solid $color;
+                        transition: all 0.2s ease;
+                        overflow: hidden;
+                        cursor: help;
+                    CSS,
+                ]),
         ];
     }
 
-    private function color(Money $balance): array
+    private function color(Money $balance): string
     {
         if ($balance->isPositive()) {
-            return Color::Green;
+            return Arr::get(Color::Green, '600');
         }
 
         if ($balance->isNegative()) {
-            return Color::Red;
+            return Arr::get(Color::Red, '600');
         }
 
-        return Color::Gray;
+        return Arr::get(Color::Gray, '600');
     }
 
     public function getColumns(): int|array|null

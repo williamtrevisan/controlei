@@ -30,6 +30,14 @@ class ExpenseForm
                                     ->placeholder('Ex.: Aluguel')
                                     ->required(),
 
+                                Select::make('category_id')
+                                    ->label('Categoria')
+                                    ->relationship('category', 'description')
+                                    ->searchable()
+                                    ->preload()
+                                    ->nullable()
+                                    ->helperText('Opcionalmente, vincule esta despesa a uma categoria para análises futuras.'),
+
                                 Select::make('frequency')
                                     ->label('Periodicidade')
                                     ->options(ExpenseFrequency::class)

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property string $description
+ * @property string|null $icon
+ * @property string|null $color
  * @property bool $active
  */
 class Category extends Model
@@ -17,6 +19,8 @@ class Category extends Model
 
     protected $fillable = [
         'description',
+        'icon',
+        'color',
         'active',
     ];
 
@@ -30,5 +34,10 @@ class Category extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
     }
 }

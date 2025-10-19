@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Expenses\Tables;
 use App\Actions\ClassifyExpenses;
 use App\Models\Expense;
 use Filament\Actions\BulkAction;
+use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -18,7 +19,15 @@ class ExpensesTable
             ->columns([
                 TextColumn::make('description')
                     ->label('Descrição')
-                    ->width('40%')
+                    ->width('30%')
+                    ->searchable(),
+
+                TextColumn::make('category.description')
+                    ->label('Categoria')
+                    ->badge()
+                    ->color(fn (Expense $record) => self::getColorFromName($record->category?->color))
+                    ->icon(fn (Expense $record) => $record->category?->icon ? 'heroicon-o-' . $record->category->icon : null)
+                    ->sortable()
                     ->searchable(),
 
                 TextColumn::make('frequency')
@@ -67,5 +76,31 @@ class ExpensesTable
             ->emptyStateHeading('Nenhuma despesa cadastrada.')
             ->emptyStateDescription('Crie uma conta primeiro e depois cadastre suas despesas para acompanhar seus gastos mensais.')
             ->emptyStateIcon(Heroicon::OutlinedArrowTrendingDown);
+    }
+
+    private static function getColorFromName(?string $colorName): array|string
+    {
+        if (! $colorName) {
+            return Color::Gray;
+        }
+
+        return match ($colorName) {
+            'purple' => Color::Purple,
+            'pink' => Color::Pink,
+            'amber' => Color::Amber,
+            'green' => Color::Green,
+            'blue' => Color::Blue,
+            'cyan' => Color::Cyan,
+            'red' => Color::Red,
+            'orange' => Color::Orange,
+            'yellow' => Color::Yellow,
+            'indigo' => Color::Indigo,
+            'violet' => Color::Violet,
+            'emerald' => Color::Emerald,
+            'rose' => Color::Rose,
+            'slate' => Color::Slate,
+            'gray' => Color::Gray,
+            default => Color::Gray,
+        };
     }
 }

@@ -9,32 +9,31 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     private array $categories = [
-        'Alimentação',
-        'Transporte',
-        'Saúde',
-        'Moradia',
-        'Educação',
-        'Lazer e entretenimento',
-        'Vestuário',
-        'Serviços pessoais',
-        'Tecnologia e eletrônicos',
-        'Pets',
-        'Finanças e impostos',
-        'Doações e presentes',
-        'Receitas',
-        'Investimentos',
-        'Outros'
+        ['description' => 'Alimentação', 'icon' => 'shopping-cart', 'color' => 'amber'],
+        ['description' => 'Transporte', 'icon' => 'truck', 'color' => 'blue'],
+        ['description' => 'Saúde', 'icon' => 'heart', 'color' => 'red'],
+        ['description' => 'Moradia', 'icon' => 'home', 'color' => 'purple'],
+        ['description' => 'Educação', 'icon' => 'academic-cap', 'color' => 'indigo'],
+        ['description' => 'Lazer e entretenimento', 'icon' => 'film', 'color' => 'pink'],
+        ['description' => 'Vestuário', 'icon' => 'sparkles', 'color' => 'cyan'],
+        ['description' => 'Serviços pessoais', 'icon' => 'user-circle', 'color' => 'orange'],
+        ['description' => 'Tecnologia e eletrônicos', 'icon' => 'device-phone-mobile', 'color' => 'slate'],
+        ['description' => 'Pets', 'icon' => 'heart', 'color' => 'green'],
+        ['description' => 'Finanças e impostos', 'icon' => 'banknotes', 'color' => 'yellow'],
+        ['description' => 'Doações e presentes', 'icon' => 'gift', 'color' => 'rose'],
+        ['description' => 'Receitas', 'icon' => 'arrow-trending-up', 'color' => 'emerald'],
+        ['description' => 'Investimentos', 'icon' => 'chart-bar', 'color' => 'violet'],
+        ['description' => 'Outros', 'icon' => 'ellipsis-horizontal-circle', 'color' => 'gray'],
     ];
 
     public function up(): void
     {
         collect($this->categories)
-            ->map(fn (string $category) => [
-                'description' => $category,
+            ->map(fn (array $category) => array_merge($category, [
                 'active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ])
+            ]))
             ->pipe(fn (Collection $categories) => DB::table('categories')->insert($categories->toArray()));
     }
 };

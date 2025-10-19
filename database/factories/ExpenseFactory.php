@@ -20,6 +20,7 @@ class ExpenseFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
+            'category_id' => fake()->optional(0.8)->numberBetween(1, 15),
             'description' => fake()->word(),
             'frequency' => fake()->randomElement(ExpenseFrequency::cases()),
             'matcher_regex' => '',
