@@ -7,11 +7,18 @@ use App\Models\Card;
 use App\Models\Category;
 use App\Models\IncomeSource;
 use App\Models\Invite;
+use App\Models\Payment;
+use App\Models\PixPayment;
+use App\Models\Plan;
 use App\Models\Statement;
+use App\Models\Subscription;
+use App\Models\SubscriptionEvent;
 use App\Models\Transaction;
 use App\Models\TransactionCategoryFeedback;
 use App\Models\TransactionMember;
+use App\Models\UsageTracking;
 use App\Models\User;
+use App\Policies\UserPolicy;
 use App\Repositories\AccountEloquentRepository;
 use App\Repositories\CardEloquentRepository;
 use App\Repositories\CategoryEloquentRepository;
@@ -21,24 +28,39 @@ use App\Repositories\Contracts\CategoryRepository;
 use App\Repositories\Contracts\IncomeSourceRepository;
 use App\Repositories\Contracts\InviteRepository;
 use App\Repositories\Contracts\NotificationRepository;
+use App\Repositories\Contracts\ChargeRepository;
+use App\Repositories\Contracts\PaymentRepository;
+use App\Repositories\Contracts\PixPaymentRepository;
+use App\Repositories\Contracts\PlanRepository;
 use App\Repositories\Contracts\StatementRepository;
+use App\Repositories\Contracts\SubscriptionEventRepository;
+use App\Repositories\Contracts\SubscriptionRepository;
 use App\Repositories\Contracts\TransactionCategoryFeedbackRepository;
 use App\Repositories\Contracts\TransactionMemberRepository;
 use App\Repositories\Contracts\TransactionRepository;
+use App\Repositories\Contracts\UsageTrackingRepository;
 use App\Repositories\Contracts\UserRepository;
 use App\Repositories\IncomeSourceEloquentRepository;
 use App\Repositories\InviteEloquentRepository;
 use App\Repositories\NotificationEloquentRepository;
+use App\Repositories\ChargeHttpRepository;
+use App\Repositories\PaymentEloquentRepository;
+use App\Repositories\PixPaymentEloquentRepository;
+use App\Repositories\PlanEloquentRepository;
 use App\Repositories\StatementEloquentRepository;
+use App\Repositories\SubscriptionEloquentRepository;
+use App\Repositories\SubscriptionEventEloquentRepository;
 use App\Repositories\TransactionCategoryFeedbackEloquentRepository;
 use App\Repositories\TransactionEloquentRepository;
 use App\Repositories\TransactionMemberEloquentRepository;
+use App\Repositories\UsageTrackingEloquentRepository;
 use App\Repositories\UserEloquentRepository;
 use App\Services\Contracts;
 use App\Services\InstallmentGenerator;
 use Filament\Pages\Page;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
 
@@ -64,6 +86,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(TransactionMemberRepository::class, fn () => new TransactionMemberEloquentRepository(new TransactionMember));
         $this->app->singleton(UserRepository::class, fn () => new UserEloquentRepository(new User));
         $this->app->singleton(NotificationRepository::class, fn () => new NotificationEloquentRepository(new DatabaseNotification));
+        $this->app->singleton(PlanRepository::class, fn () => new PlanEloquentRepository(new Plan));
+        $this->app->singleton(SubscriptionRepository::class, fn () => new SubscriptionEloquentRepository(new Subscription));
+        $this->app->singleton(SubscriptionEventRepository::class, fn () => new SubscriptionEventEloquentRepository(new SubscriptionEvent));
+        $this->app->singleton(PaymentRepository::class, fn () => new PaymentEloquentRepository(new Payment));
+        $this->app->singleton(ChargeRepository::class, fn () => new ChargeHttpRepository(Http::woovi()));
+        $this->app->singleton(PixPaymentRepository::class, fn () => new PixPaymentEloquentRepository(new PixPayment));
+        $this->app->singleton(UsageTrackingRepository::class, fn () => new UsageTrackingEloquentRepository(new UsageTracking));
     }
 
     public function boot(): void
@@ -80,6 +109,15 @@ class AppServiceProvider extends ServiceProvider
             return Http::timeout(0)
                 ->withToken(config('services.lab.token'))
                 ->baseUrl(config('services.lab.url'));
+        });
+
+        Http::macro('woovi', function (): PendingRequest {
+            return Http::timeout(30)
+                ->baseUrl(config('services.woovi.url'))
+                ->acceptJson()
+                ->contentType('application/json')
+                ->withToken(config('services.woovi.client.id'), type: '')
+                ->withUserAgent('controlei.app');
         });
     }
 }

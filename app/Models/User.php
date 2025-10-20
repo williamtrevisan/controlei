@@ -7,15 +7,25 @@ use App\Observers\UserObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 
 /**
- * @property string $id,
- * @property string $name,
- * @property string $email,
- * @property string $invite_code,
+ * @property string $id
+ * @property int $plan_id
+ * @property string $name
+ * @property string $email
+ * @property string $invite_code
+ *
+ * @property-read Account $accounts
+ * @property-read Plan $plan
+ * @property-read Subscription $subscription
+ * @property-read Collection<int, Subscription> $subscriptions
+ * @property-read Collection<int, Payment> $payments
  */
 #[ObservedBy(UserObserver::class)]
 class User extends Authenticatable
@@ -26,6 +36,7 @@ class User extends Authenticatable
     use HasUuids;
 
     protected $fillable = [
+        'plan_id',
         'name',
         'email',
         'password',
@@ -48,6 +59,26 @@ class User extends Authenticatable
     public function accounts(): HasMany
     {
         return $this->hasMany(Account::class);
+    }
+
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
+    }
+
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class)->latestOfMany();
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public function inviteCode(): string

@@ -44,4 +44,13 @@ return [
         'token' => env('LAB_API_TOKEN'),
     ],
 
+    'woovi' => [
+        'url' => env('WOOVI_API_URL', 'https://api.woovi-sandbox.com/api/v1'),
+        'client' => [
+            'id' => env('WOOVI_API_CLIENT_ID', 'Client_Id_ef6fa174-d5fe-42c7-949e-58e7143ccc03'),
+        ],
+        'key' => env('WOOVI_API_KEY'),
+        'webhook_secret' => env('WOOVI_WEBHOOK_SECRET'),
+    ],
+
 ];

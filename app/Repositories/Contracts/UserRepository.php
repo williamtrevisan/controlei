@@ -7,6 +7,8 @@ use Illuminate\Support\Collection;
 
 interface UserRepository
 {
+    public function update(User $user, array $data): User;
+
     /**
      * @param string $inviteCode
      * @return Collection<int, User>

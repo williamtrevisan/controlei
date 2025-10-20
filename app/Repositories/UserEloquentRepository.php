@@ -20,6 +20,11 @@ class UserEloquentRepository implements UserRepository
         return $this->model->newQuery();
     }
 
+    public function update(User $user, array $data): User
+    {
+        return tap($user)->update($data);
+    }
+
     /**
      * @param string $inviteCode
      * @return Collection<int, User>

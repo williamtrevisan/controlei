@@ -6,7 +6,7 @@ use App\Enums\AccountBank;
 use App\Enums\AccountType;
 use App\Models\Account;
 use App\Repositories\Contracts\AccountRepository;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class AccountEloquentRepository implements AccountRepository
@@ -30,7 +30,7 @@ class AccountEloquentRepository implements AccountRepository
         string $account,
         string $accountDigit
     ): Account {
-        return Account::query()
+        return $this->builder()
             ->firstOrCreate([
                 'user_id' => auth()->id(),
                 'bank' => $bank->value,
