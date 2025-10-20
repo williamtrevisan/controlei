@@ -94,11 +94,6 @@ class TransactionsTable
                     })
                     ->alignment(Alignment::Right),
 
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->visible(fn (?Transaction $transaction) => ! $transaction?->status->isPaid()),
-
                 TextColumn::make('installments')
                     ->label('Parcela')
                     ->alignment(Alignment::Center),

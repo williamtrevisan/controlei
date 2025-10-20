@@ -70,7 +70,9 @@ readonly class TransactionData implements Arrayable
             paymentMethod: $transaction->paymentMethod(),
             currentInstallment: $transaction->installments()?->current(),
             totalInstallments: $transaction->installments()?->total(),
-            status: $transaction->date()->isFuture() ? TransactionStatus::Scheduled : TransactionStatus::Paid,
+            status: $transaction->statementPeriod()->isCurrentOrPast()
+                ? TransactionStatus::Paid
+                : TransactionStatus::Scheduled,
             matcherRegex: null,
         );
     }

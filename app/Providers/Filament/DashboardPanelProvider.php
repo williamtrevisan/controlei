@@ -47,6 +47,7 @@ class DashboardPanelProvider extends PanelProvider
                 FilamentInfoWidget::class,
             ])
             ->sidebarCollapsibleOnDesktop()
+            ->globalSearch(provider: false)
             ->renderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,
                 fn () => Blade::render(<<<'HTML'
